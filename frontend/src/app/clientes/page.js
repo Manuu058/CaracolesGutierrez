@@ -8,11 +8,8 @@ const estadoInicial = {
   telefono: "",
   email: "",
   direccion: "",
-  empresa: "",
   nif_cif: "",
   persona_contacto: "",
-  iban: "",
-  metodo_pago_preferido: "",
   observaciones: "",
 };
 
@@ -62,7 +59,7 @@ export default function ClientesPage() {
 
       setForm(estadoInicial);
       setEditandoId(null);
-      cargarClientes();
+      await cargarClientes();
     } catch (error) {
       console.error("Error al guardar cliente:", error);
       setMensaje(
@@ -79,11 +76,8 @@ export default function ClientesPage() {
       telefono: cliente.telefono || "",
       email: cliente.email || "",
       direccion: cliente.direccion || "",
-      empresa: cliente.empresa || "",
       nif_cif: cliente.nif_cif || "",
       persona_contacto: cliente.persona_contacto || "",
-      iban: cliente.iban || "",
-      metodo_pago_preferido: cliente.metodo_pago_preferido || "",
       observaciones: cliente.observaciones || "",
     });
     setEditandoId(cliente.id);
@@ -96,7 +90,7 @@ export default function ClientesPage() {
     try {
       await api.delete(`/clientes/${id}`);
       setMensaje("Cliente eliminado correctamente");
-      cargarClientes();
+      await cargarClientes();
     } catch (error) {
       console.error("Error al eliminar cliente:", error);
       setMensaje(
@@ -242,7 +236,7 @@ export default function ClientesPage() {
     width: "100%",
     borderCollapse: "separate",
     borderSpacing: 0,
-    minWidth: "1500px",
+    minWidth: "1200px",
   };
 
   const thStyle = {
@@ -444,17 +438,6 @@ export default function ClientesPage() {
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Empresa</label>
-                  <input
-                    name="empresa"
-                    placeholder="Empresa o razón social"
-                    value={form.empresa}
-                    onChange={handleChange}
-                    style={inputStyle}
-                  />
-                </div>
-
-                <div>
                   <label style={labelStyle}>NIF / CIF</label>
                   <input
                     name="nif_cif"
@@ -476,28 +459,26 @@ export default function ClientesPage() {
                   />
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "18px" }}>
-                  <div>
-                    <label style={labelStyle}>Teléfono</label>
-                    <input
-                      name="telefono"
-                      placeholder="Teléfono"
-                      value={form.telefono}
-                      onChange={handleChange}
-                      style={inputStyle}
-                    />
-                  </div>
+                <div>
+                  <label style={labelStyle}>Teléfono</label>
+                  <input
+                    name="telefono"
+                    placeholder="Teléfono"
+                    value={form.telefono}
+                    onChange={handleChange}
+                    style={inputStyle}
+                  />
+                </div>
 
-                  <div>
-                    <label style={labelStyle}>Email</label>
-                    <input
-                      name="email"
-                      placeholder="Correo electrónico"
-                      value={form.email}
-                      onChange={handleChange}
-                      style={inputStyle}
-                    />
-                  </div>
+                <div>
+                  <label style={labelStyle}>Email</label>
+                  <input
+                    name="email"
+                    placeholder="Correo electrónico"
+                    value={form.email}
+                    onChange={handleChange}
+                    style={inputStyle}
+                  />
                 </div>
 
                 <div>
@@ -509,30 +490,6 @@ export default function ClientesPage() {
                     onChange={handleChange}
                     style={inputStyle}
                   />
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "18px" }}>
-                  <div>
-                    <label style={labelStyle}>IBAN</label>
-                    <input
-                      name="iban"
-                      placeholder="IBAN"
-                      value={form.iban}
-                      onChange={handleChange}
-                      style={inputStyle}
-                    />
-                  </div>
-
-                  <div>
-                    <label style={labelStyle}>Método de pago preferido</label>
-                    <input
-                      name="metodo_pago_preferido"
-                      placeholder="Ej. Transferencia, efectivo, recibo..."
-                      value={form.metodo_pago_preferido}
-                      onChange={handleChange}
-                      style={inputStyle}
-                    />
-                  </div>
                 </div>
 
                 <div>
@@ -585,7 +542,7 @@ export default function ClientesPage() {
 
             <div style={{ marginBottom: "16px" }}>
               <input
-                placeholder="Buscar por nombre, empresa, NIF/CIF, teléfono o email"
+                placeholder="Buscar por nombre, NIF/CIF, teléfono o email"
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
                 style={inputStyle}
@@ -597,34 +554,26 @@ export default function ClientesPage() {
                 <thead>
                   <tr>
                     <th style={thStyle}>Nombre</th>
-                    <th style={thStyle}>Empresa</th>
                     <th style={thStyle}>NIF/CIF</th>
                     <th style={thStyle}>Contacto</th>
                     <th style={thStyle}>Teléfono</th>
                     <th style={thStyle}>Email</th>
                     <th style={thStyle}>Dirección</th>
-                    <th style={thStyle}>IBAN</th>
-                    <th style={thStyle}>Método pago</th>
                     <th style={thStyle}>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {clientes.length > 0 ? (
-                    clientes.map((cliente) => (
-                      <tr key={cliente.id}>
+                    clientes.map((cliente, index) => (
+                      <tr key={`${cliente.id || 0}-${index}`}>
                         <td style={{ ...tdStyle, fontWeight: 800 }}>
                           {cliente.nombre || "-"}
                         </td>
-                        <td style={tdStyle}>{cliente.empresa || "-"}</td>
                         <td style={tdStyle}>{badge(cliente.nif_cif)}</td>
                         <td style={tdStyle}>{cliente.persona_contacto || "-"}</td>
                         <td style={tdStyle}>{cliente.telefono || "-"}</td>
                         <td style={tdStyle}>{cliente.email || "-"}</td>
                         <td style={tdStyle}>{cliente.direccion || "-"}</td>
-                        <td style={tdStyle}>{cliente.iban || "-"}</td>
-                        <td style={tdStyle}>
-                          {cliente.metodo_pago_preferido || "-"}
-                        </td>
                         <td style={tdStyle}>
                           <div
                             style={{
@@ -634,12 +583,14 @@ export default function ClientesPage() {
                             }}
                           >
                             <button
+                              type="button"
                               onClick={() => editar(cliente)}
                               style={botonEditar}
                             >
                               Editar
                             </button>
                             <button
+                              type="button"
                               onClick={() => eliminar(cliente.id)}
                               style={botonEliminar}
                             >
@@ -651,7 +602,7 @@ export default function ClientesPage() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={10} style={emptyCellStyle}>
+                      <td colSpan={7} style={emptyCellStyle}>
                         No hay clientes registrados
                       </td>
                     </tr>
