@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import api from "../../lib/api";
 import SimpleTable from "../../components/SimpleTable";
 
@@ -9,7 +9,11 @@ export default function VehiculosPage() {
   const [empleados, setEmpleados] = useState([]);
   const [mantenimientos, setMantenimientos] = useState([]);
   const [proximos, setProximos] = useState([]);
+
   const [mensaje, setMensaje] = useState("");
+  const [esError, setEsError] = useState(false);
+  const [cargando, setCargando] = useState(true);
+  const [guardando, setGuardando] = useState(false);
 
   const [nuevoVehiculo, setNuevoVehiculo] = useState({
     matricula: "",
@@ -27,6 +31,8 @@ export default function VehiculosPage() {
 
   async function cargarTodo() {
     try {
+      setCargando(true);
+
       const [v, e, m, p] = await Promise.all([
         api.get("/vehiculos"),
         api.get("/empleados"),
@@ -34,50 +40,147 @@ export default function VehiculosPage() {
         api.get("/mantenimientos/proximos/listado"),
       ]);
 
-      setVehiculos(v.data || []);
-      setEmpleados(e.data || []);
-      setMantenimientos(m.data || []);
-      setProximos(p.data || []);
+      setVehiculos(Array.isArray(v.data) ? v.data : []);
+      setEmpleados(Array.isArray(e.data) ? e.data : []);
+      setMantenimientos(Array.isArray(m.data) ? m.data : []);
+      setProximos(Array.isArray(p.data) ? p.data : []);
     } catch (error) {
       console.error("Error al cargar vehículos:", error);
+      mostrarMensaje(
+        error?.response?.data?.error || "Error al cargar los datos del módulo",
+        true
+      );
+    } finally {
+      setCargando(false);
     }
   }
 
-  const handleChange = (e) => {
-    setNuevoVehiculo({
-      ...nuevoVehiculo,
-      [e.target.name]: e.target.value,
-    });
-  };
+  function mostrarMensaje(texto, error = false) {
+    setMensaje(texto);
+    setEsError(error);
 
-  const crearVehiculo = async (e) => {
+    window.clearTimeout(window.__vehiculosMensajeTimeout);
+    window.__vehiculosMensajeTimeout = window.setTimeout(() => {
+      setMensaje("");
+      setEsError(false);
+    }, 3500);
+  }
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+
+    setNuevoVehiculo((prev) => ({
+      ...prev,
+      [name]: name === "matricula" ? value.toUpperCase() : value,
+    }));
+  }
+
+  function limpiarFormulario() {
+    setNuevoVehiculo({
+      matricula: "",
+      marca: "",
+      modelo: "",
+      matriculacion: "",
+      conductor_habitual_id: "",
+      kilometros_actuales: "",
+      observaciones: "",
+    });
+  }
+
+  function validarFormulario() {
+    const matricula = String(nuevoVehiculo.matricula || "").trim();
+    const marca = String(nuevoVehiculo.marca || "").trim();
+    const modelo = String(nuevoVehiculo.modelo || "").trim();
+    const matriculacion = String(nuevoVehiculo.matriculacion || "").trim();
+    const kilometros = Number(nuevoVehiculo.kilometros_actuales || 0);
+
+    if (!matricula) {
+      mostrarMensaje("La matrícula es obligatoria", true);
+      return false;
+    }
+
+    if (!marca) {
+      mostrarMensaje("La marca es obligatoria", true);
+      return false;
+    }
+
+    if (!modelo) {
+      mostrarMensaje("El modelo es obligatorio", true);
+      return false;
+    }
+
+    if (!matriculacion) {
+      mostrarMensaje("La fecha de matriculación es obligatoria", true);
+      return false;
+    }
+
+    if (kilometros < 0) {
+      mostrarMensaje("Los kilómetros no pueden ser negativos", true);
+      return false;
+    }
+
+    return true;
+  }
+
+  async function crearVehiculo(e) {
     e.preventDefault();
-    setMensaje("");
+    if (guardando) return;
+
+    if (!validarFormulario()) return;
 
     try {
-      await api.post("/vehiculos", {
-        ...nuevoVehiculo,
-        conductor_habitual_id: nuevoVehiculo.conductor_habitual_id || null,
+      setGuardando(true);
+      setMensaje("");
+
+      const payload = {
+        matricula: String(nuevoVehiculo.matricula || "").trim().toUpperCase(),
+        marca: String(nuevoVehiculo.marca || "").trim(),
+        modelo: String(nuevoVehiculo.modelo || "").trim(),
+        matriculacion: nuevoVehiculo.matriculacion,
+        conductor_habitual_id: nuevoVehiculo.conductor_habitual_id
+          ? Number(nuevoVehiculo.conductor_habitual_id)
+          : null,
         kilometros_actuales: Number(nuevoVehiculo.kilometros_actuales || 0),
-      });
+        observaciones: String(nuevoVehiculo.observaciones || "").trim() || null,
+      };
 
-      setNuevoVehiculo({
-        matricula: "",
-        marca: "",
-        modelo: "",
-        matriculacion: "",
-        conductor_habitual_id: "",
-        kilometros_actuales: "",
-        observaciones: "",
-      });
+      await api.post("/vehiculos", payload);
 
-      setMensaje("Vehículo creado correctamente");
-      cargarTodo();
+      limpiarFormulario();
+      await cargarTodo();
+      mostrarMensaje("Vehículo creado correctamente");
     } catch (error) {
-      console.error(error);
-      setMensaje(error.response?.data?.error || "Error al crear vehículo");
+      console.error("Error al crear vehículo:", error);
+      mostrarMensaje(
+        error?.response?.data?.error || "Error al crear vehículo",
+        true
+      );
+    } finally {
+      setGuardando(false);
     }
-  };
+  }
+
+  const proximosOrdenados = useMemo(() => {
+    return [...proximos].sort((a, b) => {
+      const fechaA = new Date(a.proxima_fecha || 0).getTime();
+      const fechaB = new Date(b.proxima_fecha || 0).getTime();
+      return fechaA - fechaB;
+    });
+  }, [proximos]);
+
+  const mantenimientosOrdenados = useMemo(() => {
+    return [...mantenimientos].sort((a, b) => {
+      const fechaA = new Date(a.fecha || 0).getTime();
+      const fechaB = new Date(b.fecha || 0).getTime();
+      return fechaB - fechaA;
+    });
+  }, [mantenimientos]);
+
+  const vehiculosOrdenados = useMemo(() => {
+    return [...vehiculos].sort((a, b) =>
+      String(a.matricula || "").localeCompare(String(b.matricula || ""))
+    );
+  }, [vehiculos]);
 
   const pageStyle = {
     minHeight: "100vh",
@@ -117,10 +220,17 @@ export default function VehiculosPage() {
     fontWeight: 700,
   };
 
+  const tableWrapperStyle = {
+    background: "#ffffff",
+    border: "1px solid #eef2f7",
+    borderRadius: "16px",
+    padding: "8px",
+    overflowX: "auto",
+  };
+
   return (
     <main style={pageStyle}>
       <div style={containerStyle}>
-        {/* CABECERA */}
         <section
           style={{
             ...cardStyle,
@@ -183,7 +293,22 @@ export default function VehiculosPage() {
           </div>
         </section>
 
-        {/* KPIS */}
+        {mensaje ? (
+          <section
+            style={{
+              ...cardStyle,
+              padding: "16px 20px",
+              marginBottom: "20px",
+              background: esError ? "#fef2f2" : "#ecfdf5",
+              border: esError ? "1px solid #fecaca" : "1px solid #bbf7d0",
+              color: esError ? "#b91c1c" : "#166534",
+              fontWeight: 700,
+            }}
+          >
+            {mensaje}
+          </section>
+        ) : null}
+
         <section
           style={{
             display: "grid",
@@ -197,9 +322,9 @@ export default function VehiculosPage() {
             { titulo: "Empleados", valor: empleados.length },
             { titulo: "Avisos próximos", valor: proximos.length },
             { titulo: "Mantenimientos", valor: mantenimientos.length },
-          ].map((item, i) => (
+          ].map((item) => (
             <div
-              key={i}
+              key={item.titulo}
               style={{
                 ...cardStyle,
                 padding: "20px",
@@ -229,11 +354,10 @@ export default function VehiculosPage() {
           ))}
         </section>
 
-        {/* FORM + PRÓXIMOS */}
         <section
           style={{
             display: "grid",
-            gridTemplateColumns: "1.1fr 1fr",
+            gridTemplateColumns: "minmax(360px, 1.1fr) minmax(320px, 1fr)",
             gap: "18px",
             alignItems: "start",
             marginBottom: "20px",
@@ -264,32 +388,10 @@ export default function VehiculosPage() {
                   lineHeight: 1.6,
                 }}
               >
-                Añade los datos principales del vehículo y asígnalo a un conductor.
+                Añade los datos principales del vehículo y asígnalo a un
+                conductor.
               </p>
             </div>
-
-            {mensaje ? (
-              <div
-                style={{
-                  marginBottom: "18px",
-                  padding: "14px 16px",
-                  borderRadius: "14px",
-                  background: mensaje.toLowerCase().includes("error")
-                    ? "#fef2f2"
-                    : "#ecfdf5",
-                  color: mensaje.toLowerCase().includes("error")
-                    ? "#b91c1c"
-                    : "#166534",
-                  border: mensaje.toLowerCase().includes("error")
-                    ? "1px solid #fecaca"
-                    : "1px solid #bbf7d0",
-                  fontWeight: 600,
-                  fontSize: "14px",
-                }}
-              >
-                {mensaje}
-              </div>
-            ) : null}
 
             <form onSubmit={crearVehiculo}>
               <div
@@ -306,6 +408,8 @@ export default function VehiculosPage() {
                     value={nuevoVehiculo.matricula}
                     onChange={handleChange}
                     style={inputStyle}
+                    placeholder="1234ABC"
+                    maxLength={20}
                   />
                 </div>
 
@@ -316,6 +420,8 @@ export default function VehiculosPage() {
                     value={nuevoVehiculo.marca}
                     onChange={handleChange}
                     style={inputStyle}
+                    placeholder="Ford"
+                    maxLength={80}
                   />
                 </div>
 
@@ -326,6 +432,8 @@ export default function VehiculosPage() {
                     value={nuevoVehiculo.modelo}
                     onChange={handleChange}
                     style={inputStyle}
+                    placeholder="Transit"
+                    maxLength={120}
                   />
                 </div>
 
@@ -361,10 +469,13 @@ export default function VehiculosPage() {
                   <label style={labelStyle}>Kilómetros actuales</label>
                   <input
                     type="number"
+                    min="0"
+                    step="1"
                     name="kilometros_actuales"
                     value={nuevoVehiculo.kilometros_actuales}
                     onChange={handleChange}
                     style={inputStyle}
+                    placeholder="0"
                   />
                 </div>
 
@@ -376,6 +487,7 @@ export default function VehiculosPage() {
                     onChange={handleChange}
                     rows={3}
                     style={{ ...inputStyle, resize: "vertical" }}
+                    placeholder="Anotaciones del vehículo"
                   />
                 </div>
               </div>
@@ -389,6 +501,7 @@ export default function VehiculosPage() {
               >
                 <button
                   type="submit"
+                  disabled={guardando}
                   style={{
                     border: "none",
                     borderRadius: "14px",
@@ -396,12 +509,13 @@ export default function VehiculosPage() {
                     fontSize: "15px",
                     fontWeight: 800,
                     color: "#fff",
-                    cursor: "pointer",
-                    background: "#166534",
+                    cursor: guardando ? "not-allowed" : "pointer",
+                    background: guardando ? "#6b7280" : "#166534",
                     boxShadow: "0 10px 20px rgba(22, 101, 52, 0.18)",
+                    opacity: guardando ? 0.8 : 1,
                   }}
                 >
-                  Guardar vehículo
+                  {guardando ? "Guardando..." : "Guardar vehículo"}
                 </button>
               </div>
             </form>
@@ -436,14 +550,7 @@ export default function VehiculosPage() {
               </p>
             </div>
 
-            <div
-              style={{
-                background: "#ffffff",
-                border: "1px solid #eef2f7",
-                borderRadius: "16px",
-                padding: "8px",
-              }}
-            >
+            <div style={tableWrapperStyle}>
               <SimpleTable
                 columns={[
                   { key: "matricula", label: "Matrícula" },
@@ -482,19 +589,18 @@ export default function VehiculosPage() {
                             ...estilo,
                           }}
                         >
-                          {row.estado_fecha}
+                          {row.estado_fecha || "-"}
                         </span>
                       );
                     },
                   },
                 ]}
-                data={proximos}
+                data={proximosOrdenados}
               />
             </div>
           </div>
         </section>
 
-        {/* VEHÍCULOS */}
         <section
           style={{
             ...cardStyle,
@@ -524,28 +630,25 @@ export default function VehiculosPage() {
             </p>
           </div>
 
-          <div
-            style={{
-              background: "#ffffff",
-              border: "1px solid #eef2f7",
-              borderRadius: "16px",
-              padding: "8px",
-            }}
-          >
+          <div style={tableWrapperStyle}>
             <SimpleTable
               columns={[
                 { key: "matricula", label: "Matrícula" },
                 { key: "marca", label: "Marca" },
                 { key: "modelo", label: "Modelo" },
                 { key: "conductor_habitual", label: "Conductor" },
-                { key: "kilometros_actuales", label: "Kilómetros" },
+                {
+                  key: "kilometros_actuales",
+                  label: "Kilómetros",
+                  render: (row) =>
+                    Number(row.kilometros_actuales || 0).toLocaleString("es-ES"),
+                },
               ]}
-              data={vehiculos}
+              data={vehiculosOrdenados}
             />
           </div>
         </section>
 
-        {/* HISTORIAL */}
         <section
           style={{
             ...cardStyle,
@@ -574,26 +677,39 @@ export default function VehiculosPage() {
             </p>
           </div>
 
-          <div
-            style={{
-              background: "#ffffff",
-              border: "1px solid #eef2f7",
-              borderRadius: "16px",
-              padding: "8px",
-            }}
-          >
+          <div style={tableWrapperStyle}>
             <SimpleTable
               columns={[
                 { key: "matricula", label: "Matrícula" },
                 { key: "tipo_mantenimiento", label: "Tipo" },
                 { key: "fecha", label: "Fecha" },
-                { key: "coste", label: "Coste" },
+                {
+                  key: "coste",
+                  label: "Coste",
+                  render: (row) =>
+                    row.coste !== null && row.coste !== undefined
+                      ? `${Number(row.coste).toFixed(2)} €`
+                      : "-",
+                },
                 { key: "responsable", label: "Responsable" },
               ]}
-              data={mantenimientos}
+              data={mantenimientosOrdenados}
             />
           </div>
         </section>
+
+        {cargando ? (
+          <section
+            style={{
+              marginTop: "20px",
+              textAlign: "center",
+              color: "#6b7280",
+              fontWeight: 700,
+            }}
+          >
+            Cargando datos...
+          </section>
+        ) : null}
       </div>
     </main>
   );

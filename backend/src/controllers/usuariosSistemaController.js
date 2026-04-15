@@ -1,57 +1,72 @@
 const pool = require("../config/db");
 const bcrypt = require("bcrypt");
 
+function limpiarTexto(valor) {
+  if (valor === undefined || valor === null) return null;
+  const texto = String(valor).trim();
+  return texto === "" ? null : texto;
+}
+
 async function listarUsuarios(req, res) {
   try {
-    const { busqueda = "", rol = "", estado = "" } = req.query;
+    const { busqueda = "", estado = "" } = req.query;
 
     let sql = `
       SELECT
-        u.id,
-        u.username,
-        u.rol,
-        u.trabajador_id,
-        u.ultimo_acceso,
-        u.estado,
-        u.created_at,
-        t.nombre,
-        t.apellidos
-      FROM usuarios_sistema u
-      LEFT JOIN trabajadores t ON t.id = u.trabajador_id
+        id,
+        nombre,
+        apellidos,
+        email,
+        username,
+        telefono,
+        activo,
+        ultimo_acceso,
+        created_at,
+        updated_at
+      FROM usuarios
       WHERE 1 = 1
     `;
 
     const params = [];
 
-    if (busqueda) {
+    if (busqueda && String(busqueda).trim() !== "") {
+      const filtro = `%${String(busqueda).trim()}%`;
       sql += `
         AND (
-          u.username LIKE ?
-          OR t.nombre LIKE ?
-          OR t.apellidos LIKE ?
+          nombre LIKE ?
+          OR apellidos LIKE ?
+          OR email LIKE ?
+          OR username LIKE ?
+          OR telefono LIKE ?
         )
       `;
-      const filtro = `%${busqueda}%`;
-      params.push(filtro, filtro, filtro);
+      params.push(filtro, filtro, filtro, filtro, filtro);
     }
 
-    if (rol) {
-      sql += ` AND u.rol = ?`;
-      params.push(rol);
+    if (estado === "activo") {
+      sql += ` AND activo = 1`;
     }
 
-    if (estado) {
-      sql += ` AND u.estado = ?`;
-      params.push(estado);
+    if (estado === "inactivo") {
+      sql += ` AND activo = 0`;
     }
 
-    sql += ` ORDER BY u.username ASC`;
+    sql += ` ORDER BY username ASC`;
 
     const [rows] = await pool.query(sql, params);
-    return res.json(rows);
+
+    const datos = rows.map((u) => ({
+      ...u,
+      estado: u.activo === 1 ? "activo" : "inactivo",
+    }));
+
+    return res.json(datos);
   } catch (error) {
     console.error("Error al listar usuarios:", error);
-    return res.status(500).json({ error: "Error al listar usuarios" });
+    return res.status(500).json({
+      error: "Error al listar usuarios",
+      detalle: error.message,
+    });
   }
 }
 
@@ -62,18 +77,18 @@ async function obtenerUsuario(req, res) {
     const [rows] = await pool.query(
       `
       SELECT
-        u.id,
-        u.username,
-        u.rol,
-        u.trabajador_id,
-        u.ultimo_acceso,
-        u.estado,
-        u.created_at,
-        t.nombre,
-        t.apellidos
-      FROM usuarios_sistema u
-      LEFT JOIN trabajadores t ON t.id = u.trabajador_id
-      WHERE u.id = ?
+        id,
+        nombre,
+        apellidos,
+        email,
+        username,
+        telefono,
+        activo,
+        ultimo_acceso,
+        created_at,
+        updated_at
+      FROM usuarios
+      WHERE id = ?
       LIMIT 1
       `,
       [id]
@@ -83,50 +98,91 @@ async function obtenerUsuario(req, res) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
-    return res.json(rows[0]);
+    const usuario = {
+      ...rows[0],
+      estado: rows[0].activo === 1 ? "activo" : "inactivo",
+    };
+
+    return res.json(usuario);
   } catch (error) {
     console.error("Error al obtener usuario:", error);
-    return res.status(500).json({ error: "Error al obtener usuario" });
+    return res.status(500).json({
+      error: "Error al obtener usuario",
+      detalle: error.message,
+    });
   }
 }
 
 async function crearUsuario(req, res) {
   try {
-    const { username, password, rol, trabajador_id, estado } = req.body;
+    const nombre = limpiarTexto(req.body.nombre);
+    const apellidos = limpiarTexto(req.body.apellidos);
+    const email = limpiarTexto(req.body.email);
+    const username = limpiarTexto(req.body.username);
+    const password = limpiarTexto(req.body.password);
+    const telefono = limpiarTexto(req.body.telefono);
+    const estado = limpiarTexto(req.body.estado);
 
-    if (!username || !String(username).trim()) {
+    if (!nombre) {
+      return res.status(400).json({ error: "El nombre es obligatorio" });
+    }
+
+    if (!email) {
+      return res.status(400).json({ error: "El email es obligatorio" });
+    }
+
+    if (!username) {
       return res
         .status(400)
         .json({ error: "El nombre de usuario es obligatorio" });
     }
 
-    if (!password || !String(password).trim()) {
+    if (!password) {
       return res.status(400).json({ error: "La contraseña es obligatoria" });
     }
 
-    const usernameNormalizado = String(username).trim();
-
-    const [existe] = await pool.query(
-      `SELECT id FROM usuarios_sistema WHERE username = ? LIMIT 1`,
-      [usernameNormalizado]
+    const [existeUsername] = await pool.query(
+      `SELECT id FROM usuarios WHERE username = ? LIMIT 1`,
+      [username]
     );
 
-    if (existe.length > 0) {
+    if (existeUsername.length > 0) {
       return res.status(400).json({ error: "Ese nombre de usuario ya existe" });
     }
 
-    const hash = await bcrypt.hash(String(password), 10);
+    const [existeEmail] = await pool.query(
+      `SELECT id FROM usuarios WHERE email = ? LIMIT 1`,
+      [email]
+    );
+
+    if (existeEmail.length > 0) {
+      return res.status(400).json({ error: "Ese email ya existe" });
+    }
+
+    const hash = await bcrypt.hash(password, 10);
 
     const [result] = await pool.query(
-      `INSERT INTO usuarios_sistema
-        (username, password_hash, rol, trabajador_id, estado)
-       VALUES (?, ?, ?, ?, ?)`,
+      `
+      INSERT INTO usuarios
+      (
+        nombre,
+        apellidos,
+        email,
+        username,
+        password_hash,
+        telefono,
+        activo
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+      `,
       [
-        usernameNormalizado,
+        nombre,
+        apellidos,
+        email,
+        username,
         hash,
-        rol || "consulta",
-        trabajador_id || null,
-        estado || "activo",
+        telefono,
+        estado === "inactivo" ? 0 : 1,
       ]
     );
 
@@ -136,17 +192,27 @@ async function crearUsuario(req, res) {
     });
   } catch (error) {
     console.error("Error al crear usuario:", error);
-    return res.status(500).json({ error: "Error al crear usuario" });
+    return res.status(500).json({
+      error: "Error al crear usuario",
+      detalle: error.message,
+    });
   }
 }
 
 async function actualizarUsuario(req, res) {
   try {
     const { id } = req.params;
-    const { username, rol, trabajador_id, estado, password } = req.body;
+
+    const nombre = limpiarTexto(req.body.nombre);
+    const apellidos = limpiarTexto(req.body.apellidos);
+    const email = limpiarTexto(req.body.email);
+    const username = limpiarTexto(req.body.username);
+    const password = limpiarTexto(req.body.password);
+    const telefono = limpiarTexto(req.body.telefono);
+    const estado = limpiarTexto(req.body.estado);
 
     const [actual] = await pool.query(
-      `SELECT * FROM usuarios_sistema WHERE id = ? LIMIT 1`,
+      `SELECT * FROM usuarios WHERE id = ? LIMIT 1`,
       [id]
     );
 
@@ -154,45 +220,74 @@ async function actualizarUsuario(req, res) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
-    const usernameNormalizado = username
-      ? String(username).trim()
-      : actual[0].username;
+    const usuarioActual = actual[0];
 
-    if (!usernameNormalizado) {
+    const nombreFinal = nombre || usuarioActual.nombre;
+    const apellidosFinal = apellidos !== null ? apellidos : usuarioActual.apellidos;
+    const emailFinal = email || usuarioActual.email;
+    const usernameFinal = username || usuarioActual.username;
+    const telefonoFinal = telefono !== null ? telefono : usuarioActual.telefono;
+    const activoFinal = estado === "inactivo" ? 0 : estado === "activo" ? 1 : usuarioActual.activo;
+
+    if (!nombreFinal) {
+      return res.status(400).json({ error: "El nombre es obligatorio" });
+    }
+
+    if (!emailFinal) {
+      return res.status(400).json({ error: "El email es obligatorio" });
+    }
+
+    if (!usernameFinal) {
       return res
         .status(400)
         .json({ error: "El nombre de usuario es obligatorio" });
     }
 
-    const [duplicado] = await pool.query(
-      `SELECT id FROM usuarios_sistema WHERE username = ? AND id <> ? LIMIT 1`,
-      [usernameNormalizado, id]
+    const [duplicadoUsername] = await pool.query(
+      `SELECT id FROM usuarios WHERE username = ? AND id <> ? LIMIT 1`,
+      [usernameFinal, id]
     );
 
-    if (duplicado.length > 0) {
+    if (duplicadoUsername.length > 0) {
       return res.status(400).json({ error: "Ese nombre de usuario ya existe" });
     }
 
-    let passwordHash = actual[0].password_hash;
+    const [duplicadoEmail] = await pool.query(
+      `SELECT id FROM usuarios WHERE email = ? AND id <> ? LIMIT 1`,
+      [emailFinal, id]
+    );
 
-    if (password && String(password).trim()) {
-      passwordHash = await bcrypt.hash(String(password), 10);
+    if (duplicadoEmail.length > 0) {
+      return res.status(400).json({ error: "Ese email ya existe" });
+    }
+
+    let passwordHashFinal = usuarioActual.password_hash;
+
+    if (password) {
+      passwordHashFinal = await bcrypt.hash(password, 10);
     }
 
     const [result] = await pool.query(
-      `UPDATE usuarios_sistema
-       SET username = ?,
-           password_hash = ?,
-           rol = ?,
-           trabajador_id = ?,
-           estado = ?
-       WHERE id = ?`,
+      `
+      UPDATE usuarios
+      SET
+        nombre = ?,
+        apellidos = ?,
+        email = ?,
+        username = ?,
+        password_hash = ?,
+        telefono = ?,
+        activo = ?
+      WHERE id = ?
+      `,
       [
-        usernameNormalizado,
-        passwordHash,
-        rol || actual[0].rol,
-        trabajador_id || null,
-        estado || actual[0].estado,
+        nombreFinal,
+        apellidosFinal,
+        emailFinal,
+        usernameFinal,
+        passwordHashFinal,
+        telefonoFinal,
+        activoFinal,
         id,
       ]
     );
@@ -204,7 +299,10 @@ async function actualizarUsuario(req, res) {
     return res.json({ mensaje: "Usuario actualizado correctamente" });
   } catch (error) {
     console.error("Error al actualizar usuario:", error);
-    return res.status(500).json({ error: "Error al actualizar usuario" });
+    return res.status(500).json({
+      error: "Error al actualizar usuario",
+      detalle: error.message,
+    });
   }
 }
 
@@ -213,9 +311,11 @@ async function eliminarUsuario(req, res) {
     const { id } = req.params;
 
     const [result] = await pool.query(
-      `UPDATE usuarios_sistema
-       SET estado = 'inactivo'
-       WHERE id = ?`,
+      `
+      UPDATE usuarios
+      SET activo = 0
+      WHERE id = ?
+      `,
       [id]
     );
 
@@ -226,7 +326,10 @@ async function eliminarUsuario(req, res) {
     return res.json({ mensaje: "Usuario desactivado correctamente" });
   } catch (error) {
     console.error("Error al eliminar usuario:", error);
-    return res.status(500).json({ error: "Error al eliminar usuario" });
+    return res.status(500).json({
+      error: "Error al eliminar usuario",
+      detalle: error.message,
+    });
   }
 }
 

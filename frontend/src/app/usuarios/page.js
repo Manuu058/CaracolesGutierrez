@@ -4,18 +4,18 @@ import { useEffect, useState } from "react";
 import api from "../../lib/api";
 
 const estadoInicial = {
+  nombre: "",
+  apellidos: "",
+  email: "",
   username: "",
   password: "",
-  rol: "consulta",
-  trabajador_id: "",
+  telefono: "",
   estado: "activo",
 };
 
 export default function UsuariosPage() {
   const [usuarios, setUsuarios] = useState([]);
-  const [trabajadores, setTrabajadores] = useState([]);
   const [busqueda, setBusqueda] = useState("");
-  const [rolFiltro, setRolFiltro] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("");
   const [form, setForm] = useState(estadoInicial);
   const [editandoId, setEditandoId] = useState(null);
@@ -23,31 +23,27 @@ export default function UsuariosPage() {
 
   async function cargar() {
     try {
-      const [usuariosRes, trabajadoresRes] = await Promise.all([
-        api.get("/usuarios-sistema", {
-          params: {
-            busqueda,
-            rol: rolFiltro,
-            estado: estadoFiltro,
-          },
-        }),
-        api.get("/trabajadores"),
-      ]);
+      const usuariosRes = await api.get("/usuarios-sistema", {
+        params: {
+          busqueda,
+          estado: estadoFiltro,
+        },
+      });
 
       setUsuarios(Array.isArray(usuariosRes.data) ? usuariosRes.data : []);
-      setTrabajadores(
-        Array.isArray(trabajadoresRes.data) ? trabajadoresRes.data : []
-      );
     } catch (error) {
+      console.error("Error al cargar usuarios:", error);
       setMensaje(
-        error.response?.data?.error || "Error al cargar usuarios del sistema"
+        error.response?.data?.error ||
+          error.response?.data?.detalle ||
+          "Error al cargar usuarios del sistema"
       );
     }
   }
 
   useEffect(() => {
     cargar();
-  }, [busqueda, rolFiltro, estadoFiltro]);
+  }, [busqueda, estadoFiltro]);
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -67,12 +63,9 @@ export default function UsuariosPage() {
     setMensaje("");
 
     try {
-      const payload = {
-        ...form,
-        trabajador_id: form.trabajador_id || null,
-      };
+      const payload = { ...form };
 
-      if (editandoId && !payload.password.trim()) {
+      if (editandoId && !String(payload.password || "").trim()) {
         delete payload.password;
       }
 
@@ -87,19 +80,24 @@ export default function UsuariosPage() {
       limpiarFormulario();
       await cargar();
     } catch (error) {
-      setMensaje(error.response?.data?.error || "Error al guardar usuario");
+      console.error("Error al guardar usuario:", error);
+      setMensaje(
+        error.response?.data?.error ||
+          error.response?.data?.detalle ||
+          "Error al guardar usuario"
+      );
     }
   }
 
   function editar(usuario) {
     setEditandoId(usuario.id);
     setForm({
+      nombre: usuario.nombre || "",
+      apellidos: usuario.apellidos || "",
+      email: usuario.email || "",
       username: usuario.username || "",
       password: "",
-      rol: usuario.rol || "consulta",
-      trabajador_id: usuario.trabajador_id
-        ? String(usuario.trabajador_id)
-        : "",
+      telefono: usuario.telefono || "",
       estado: usuario.estado || "activo",
     });
 
@@ -119,6 +117,7 @@ export default function UsuariosPage() {
 
       await cargar();
     } catch (error) {
+      console.error("Error al eliminar usuario:", error);
       setMensaje(
         error.response?.data?.error || "Error al desactivar usuario"
       );
@@ -158,25 +157,6 @@ export default function UsuariosPage() {
     );
   }
 
-  function badgeRol(valor) {
-    return (
-      <span
-        style={{
-          display: "inline-block",
-          padding: "7px 12px",
-          borderRadius: "999px",
-          background: "#f0fdf4",
-          color: "#166534",
-          fontWeight: 800,
-          fontSize: "12px",
-          textTransform: "capitalize",
-        }}
-      >
-        {valor || "-"}
-      </span>
-    );
-  }
-
   const pageStyle = {
     minHeight: "100vh",
     background:
@@ -185,7 +165,7 @@ export default function UsuariosPage() {
   };
 
   const containerStyle = {
-    maxWidth: "1450px",
+    maxWidth: "1550px",
     margin: "0 auto",
   };
 
@@ -305,7 +285,7 @@ export default function UsuariosPage() {
     width: "100%",
     borderCollapse: "separate",
     borderSpacing: 0,
-    minWidth: "1100px",
+    minWidth: "1200px",
   };
 
   const thStyle = {
@@ -389,9 +369,8 @@ export default function UsuariosPage() {
                   color: "#6b7280",
                 }}
               >
-                Administra usuarios, roles, vinculación con trabajadores y estado
-                de acceso desde una pantalla con la misma estética profesional
-                del resto de módulos.
+                Administra usuarios, datos básicos y estado de acceso desde una
+                pantalla homogénea con el resto de módulos.
               </p>
             </div>
 
@@ -470,17 +449,50 @@ export default function UsuariosPage() {
                 {editandoId ? "Editar usuario" : "Nuevo usuario"}
               </h2>
               <p style={sectionTextStyle}>
-                Campos más amplios, cómodos y homogéneos para altas y edición.
+                Formulario con campos más amplios y claros.
               </p>
             </div>
 
             <form onSubmit={guardar}>
               <div style={{ display: "grid", gap: "16px" }}>
                 <div>
+                  <label style={labelStyle}>Nombre</label>
+                  <input
+                    name="nombre"
+                    placeholder="Nombre"
+                    value={form.nombre}
+                    onChange={handleChange}
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Apellidos</label>
+                  <input
+                    name="apellidos"
+                    placeholder="Apellidos"
+                    value={form.apellidos}
+                    onChange={handleChange}
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Email</label>
+                  <input
+                    name="email"
+                    placeholder="Correo electrónico"
+                    value={form.email}
+                    onChange={handleChange}
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
                   <label style={labelStyle}>Nombre de usuario</label>
                   <input
                     name="username"
-                    placeholder="Introduce el nombre de usuario"
+                    placeholder="Nombre de usuario"
                     value={form.username}
                     onChange={handleChange}
                     style={inputStyle}
@@ -505,56 +517,27 @@ export default function UsuariosPage() {
                   />
                 </div>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "14px",
-                  }}
-                >
-                  <div>
-                    <label style={labelStyle}>Rol</label>
-                    <select
-                      name="rol"
-                      value={form.rol}
-                      onChange={handleChange}
-                      style={selectStyle}
-                    >
-                      <option value="administrador">Administrador</option>
-                      <option value="encargado">Encargado</option>
-                      <option value="operario">Operario</option>
-                      <option value="consulta">Consulta</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label style={labelStyle}>Estado</label>
-                    <select
-                      name="estado"
-                      value={form.estado}
-                      onChange={handleChange}
-                      style={selectStyle}
-                    >
-                      <option value="activo">Activo</option>
-                      <option value="inactivo">Inactivo</option>
-                    </select>
-                  </div>
+                <div>
+                  <label style={labelStyle}>Teléfono</label>
+                  <input
+                    name="telefono"
+                    placeholder="Teléfono"
+                    value={form.telefono}
+                    onChange={handleChange}
+                    style={inputStyle}
+                  />
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Trabajador asociado</label>
+                  <label style={labelStyle}>Estado</label>
                   <select
-                    name="trabajador_id"
-                    value={form.trabajador_id}
+                    name="estado"
+                    value={form.estado}
                     onChange={handleChange}
                     style={selectStyle}
                   >
-                    <option value="">Sin trabajador asociado</option>
-                    {trabajadores.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {[t.nombre, t.apellidos].filter(Boolean).join(" ")}
-                      </option>
-                    ))}
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
                   </select>
                 </div>
 
@@ -588,36 +571,24 @@ export default function UsuariosPage() {
             <div style={{ marginBottom: "18px" }}>
               <h2 style={sectionTitleStyle}>Buscador y listado</h2>
               <p style={sectionTextStyle}>
-                Visual más clara, filtros homogéneos y lectura más cómoda.
+                Visual más clara y lectura más cómoda.
               </p>
             </div>
 
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "1.4fr 0.8fr 0.8fr",
+                gridTemplateColumns: "1.4fr 0.8fr",
                 gap: "14px",
                 marginBottom: "16px",
               }}
             >
               <input
-                placeholder="Buscar por usuario o trabajador"
+                placeholder="Buscar por nombre, email o usuario"
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
                 style={inputStyle}
               />
-
-              <select
-                value={rolFiltro}
-                onChange={(e) => setRolFiltro(e.target.value)}
-                style={selectStyle}
-              >
-                <option value="">Todos los roles</option>
-                <option value="administrador">Administrador</option>
-                <option value="encargado">Encargado</option>
-                <option value="operario">Operario</option>
-                <option value="consulta">Consulta</option>
-              </select>
 
               <select
                 value={estadoFiltro}
@@ -634,9 +605,10 @@ export default function UsuariosPage() {
               <table style={tableStyle}>
                 <thead>
                   <tr>
+                    <th style={thStyle}>Nombre</th>
+                    <th style={thStyle}>Email</th>
                     <th style={thStyle}>Usuario</th>
-                    <th style={thStyle}>Rol</th>
-                    <th style={thStyle}>Trabajador</th>
+                    <th style={thStyle}>Teléfono</th>
                     <th style={thStyle}>Último acceso</th>
                     <th style={thStyle}>Estado</th>
                     <th style={thStyle}>Acciones</th>
@@ -647,13 +619,11 @@ export default function UsuariosPage() {
                     usuarios.map((u) => (
                       <tr key={u.id}>
                         <td style={{ ...tdStyle, fontWeight: 800 }}>
-                          {u.username || "-"}
+                          {[u.nombre, u.apellidos].filter(Boolean).join(" ") || "-"}
                         </td>
-                        <td style={tdStyle}>{badgeRol(u.rol)}</td>
-                        <td style={tdStyle}>
-                          {[u.nombre, u.apellidos].filter(Boolean).join(" ") ||
-                            "-"}
-                        </td>
+                        <td style={tdStyle}>{u.email || "-"}</td>
+                        <td style={tdStyle}>{u.username || "-"}</td>
+                        <td style={tdStyle}>{u.telefono || "-"}</td>
                         <td style={tdStyle}>{formatearFecha(u.ultimo_acceso)}</td>
                         <td style={tdStyle}>{badgeEstado(u.estado)}</td>
                         <td style={tdStyle}>
@@ -685,7 +655,7 @@ export default function UsuariosPage() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={6} style={emptyCellStyle}>
+                      <td colSpan={7} style={emptyCellStyle}>
                         No hay usuarios registrados
                       </td>
                     </tr>

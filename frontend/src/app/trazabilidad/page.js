@@ -55,6 +55,7 @@ export default function TrazabilidadPage() {
 
   const [busquedaLoteMovimiento, setBusquedaLoteMovimiento] = useState("");
   const [mostrarLotesMovimiento, setMostrarLotesMovimiento] = useState(false);
+  const [loteSeleccionadoMovimiento, setLoteSeleccionadoMovimiento] = useState(null);
 
   const [busquedaLoteDetalle, setBusquedaLoteDetalle] = useState("");
   const [mostrarLotesDetalle, setMostrarLotesDetalle] = useState(false);
@@ -160,12 +161,18 @@ export default function TrazabilidadPage() {
       };
 
       if (name === "tipo_movimiento") {
-        if (value === "ENTRADA") {
-          nuevo.cliente_id = "";
-        } else {
-          nuevo.proveedor_id = "";
+          if (value === "ENTRADA") {
+            nuevo.cliente_id = "";
+            nuevo.lote_id = "";
+            setLoteSeleccionadoMovimiento(null);
+            setBusquedaLoteMovimiento("");
+          } else {
+            nuevo.proveedor_id = "";
+            nuevo.lote_id = "";
+            setLoteSeleccionadoMovimiento(null);
+            setBusquedaLoteMovimiento("");
+          }
         }
-      }
 
       return nuevo;
     });
@@ -188,57 +195,67 @@ export default function TrazabilidadPage() {
   }
 
   function buscarCoincidenciaLote(texto) {
-    const textoNormalizado = normalizarTexto(texto);
+  const textoNormalizado = normalizarTexto(texto);
 
-    if (!textoNormalizado) return null;
+  if (!textoNormalizado) return null;
 
-    const coincidencias = lotes.filter((lote) => {
-      const codigo = normalizarTexto(lote.codigo_lote);
-      const textoCompleto = normalizarTexto(obtenerTextoLote(lote));
-      return codigo === textoNormalizado || textoCompleto === textoNormalizado;
-    });
+  const coincidencias = lotes.filter((lote) => {
+    const codigo = normalizarTexto(lote.codigo_lote);
+    const textoCompleto = normalizarTexto(obtenerTextoLote(lote));
 
-    if (coincidencias.length === 1) {
-      return coincidencias[0];
-    }
+    return (
+      codigo === textoNormalizado ||
+      codigo.includes(textoNormalizado) ||
+      textoCompleto.includes(textoNormalizado)
+    );
+  });
 
-    return null;
+  if (coincidencias.length >= 1) {
+    return coincidencias[0];
   }
 
-  async function crearMovimiento(e) {
+  return null;
+}
+
+async function crearMovimiento(e) {
   e.preventDefault();
 
   const esEntrada = formMovimiento.tipo_movimiento === "ENTRADA";
-  const loteCoincidente = buscarCoincidenciaLote(busquedaLoteMovimiento);
-  const loteIdFinal =
-    !esEntrada && (formMovimiento.lote_id || (loteCoincidente ? String(loteCoincidente.id) : ""));
 
   if (esEntrada && !busquedaLoteMovimiento.trim()) {
     mostrarMensaje("Debes escribir un código de lote para la entrada", true);
     return;
   }
 
-  if (!esEntrada && !loteIdFinal) {
+  if (!esEntrada && !loteSeleccionadoMovimiento?.id) {
     mostrarMensaje("Debes seleccionar un lote existente para la salida", true);
     return;
   }
 
   try {
-    await api.post("/movimientos-lote", {
+    const payload = {
       ...formMovimiento,
-      lote_id: esEntrada ? null : Number(loteIdFinal),
-      codigo_lote: busquedaLoteMovimiento.trim(),
+      tipo_movimiento: String(formMovimiento.tipo_movimiento || "").toUpperCase(),
+      fecha: formMovimiento.fecha || new Date().toISOString().slice(0, 10),
+      lote_id: esEntrada ? null : Number(loteSeleccionadoMovimiento.id),
+      codigo_lote: String(busquedaLoteMovimiento || "").trim(),
       proveedor_id:
-        formMovimiento.tipo_movimiento === "ENTRADA" && formMovimiento.proveedor_id
+        esEntrada && formMovimiento.proveedor_id
           ? Number(formMovimiento.proveedor_id)
           : null,
       cliente_id:
-        formMovimiento.tipo_movimiento === "SALIDA" && formMovimiento.cliente_id
+        !esEntrada && formMovimiento.cliente_id
           ? Number(formMovimiento.cliente_id)
           : null,
       cantidad_caracoles: Number(formMovimiento.cantidad_caracoles || 0),
       cantidad_cabrillas: Number(formMovimiento.cantidad_cabrillas || 0),
-    });
+      numero_albaran: formMovimiento.numero_albaran || null,
+      descripcion: formMovimiento.descripcion || null,
+    };
+
+    console.log("PAYLOAD MOVIMIENTO:", payload);
+
+    await api.post("/movimientos-lote", payload);
 
     setFormMovimiento({
       tipo_movimiento: "SALIDA",
@@ -254,6 +271,7 @@ export default function TrazabilidadPage() {
 
     setBusquedaLoteMovimiento("");
     setMostrarLotesMovimiento(false);
+    setLoteSeleccionadoMovimiento(null);
 
     await cargarDatos();
 
@@ -264,10 +282,15 @@ export default function TrazabilidadPage() {
     mostrarMensaje("Movimiento registrado correctamente");
   } catch (error) {
     console.error("Error al crear movimiento:", error);
-    mostrarMensaje(
-      error.response?.data?.error || "Error al registrar el movimiento",
-      true
-    );
+    console.error("Respuesta del backend:", error?.response?.data);
+
+    const textoError =
+      error?.response?.data?.error ||
+      error?.response?.data?.message ||
+      "Error al crear movimiento";
+
+    mostrarMensaje(textoError, true);
+    alert(textoError);
   }
 }
 
@@ -559,57 +582,68 @@ export default function TrazabilidadPage() {
                 </div>
 
                 <div style={{ position: "relative" }}>
-                  <label style={labelStyle}>Lote</label>
+                  <label style={labelStyle}>
+                    {formMovimiento.tipo_movimiento === "ENTRADA"
+                      ? "Código de lote a crear o reutilizar"
+                      : "Lote"}
+                  </label>
                   <input
                     type="text"
                     value={busquedaLoteMovimiento}
                     onChange={(e) => {
-                        const valor = e.target.value;
-                        const esEntrada = formMovimiento.tipo_movimiento === "ENTRADA";
+                      const valor = e.target.value;
+                      const esEntrada = formMovimiento.tipo_movimiento === "ENTRADA";
 
-                        setBusquedaLoteMovimiento(valor);
-                        setMostrarLotesMovimiento(true);
+                      setBusquedaLoteMovimiento(valor);
+                      setMostrarLotesMovimiento(true);
 
-                        if (esEntrada) {
-                          setFormMovimiento((prev) => ({
-                            ...prev,
-                            lote_id: "",
-                          }));
-                          return;
-                        }
-
-                        const loteCoincidente = buscarCoincidenciaLote(valor);
-
+                      if (esEntrada) {
                         setFormMovimiento((prev) => ({
                           ...prev,
-                          lote_id: loteCoincidente ? String(loteCoincidente.id) : "",
+                          lote_id: "",
                         }));
-                      }}
-                     onFocus={() => setMostrarLotesMovimiento(true)}
+                        setLoteSeleccionadoMovimiento(null);
+                        return;
+                      }
+
+                      setFormMovimiento((prev) => ({
+                        ...prev,
+                        lote_id: "",
+                      }));
+                      setLoteSeleccionadoMovimiento(null);
+                    }}
+                    onFocus={() => setMostrarLotesMovimiento(true)}
                     onBlur={() => {
-                        setTimeout(() => {
-                          const esEntrada = formMovimiento.tipo_movimiento === "ENTRADA";
+                      setTimeout(() => {
+                        const esEntrada = formMovimiento.tipo_movimiento === "ENTRADA";
 
-                          if (!esEntrada) {
-                            const loteCoincidente = buscarCoincidenciaLote(busquedaLoteMovimiento);
-
-                            if (loteCoincidente) {
-                              setFormMovimiento((prev) => ({
-                                ...prev,
-                                lote_id: String(loteCoincidente.id),
-                              }));
-                              setBusquedaLoteMovimiento(renderLoteOption(loteCoincidente));
-                            }
+                        if (!esEntrada) {
+                          if (loteSeleccionadoMovimiento?.id) {
+                            setFormMovimiento((prev) => ({
+                              ...prev,
+                              lote_id: String(loteSeleccionadoMovimiento.id),
+                            }));
+                            setBusquedaLoteMovimiento(renderLoteOption(loteSeleccionadoMovimiento));
+                          } else {
+                            setFormMovimiento((prev) => ({
+                              ...prev,
+                              lote_id: "",
+                            }));
                           }
+                        }
 
-                          setMostrarLotesMovimiento(false);
-                        }, 150);
-                      }}
-                    placeholder="Escribe código, mes, proveedor o producto"
+                        setMostrarLotesMovimiento(false);
+                      }, 150);
+                    }}
+                    placeholder={
+                      formMovimiento.tipo_movimiento === "ENTRADA"
+                        ? "Escribe el código del lote"
+                        : "Escribe código, mes, proveedor o producto"
+                    }
                     style={inputStyle}
                   />
 
-                  {formMovimiento.lote_id ? (
+                  {formMovimiento.tipo_movimiento === "SALIDA" && formMovimiento.lote_id ? (
                     <div
                       style={{
                         marginTop: "8px",
@@ -622,7 +656,9 @@ export default function TrazabilidadPage() {
                     </div>
                   ) : null}
 
-                  {mostrarLotesMovimiento && lotesFiltradosMovimiento.length > 0 ? (
+                  {mostrarLotesMovimiento &&
+                  lotesFiltradosMovimiento.length > 0 &&
+                  formMovimiento.tipo_movimiento === "SALIDA" ? (
                     <div style={dropdownStyle}>
                       {lotesFiltradosMovimiento.map((lote) => (
                         <div
@@ -632,6 +668,7 @@ export default function TrazabilidadPage() {
                               ...prev,
                               lote_id: String(lote.id),
                             }));
+                            setLoteSeleccionadoMovimiento(lote);
                             setBusquedaLoteMovimiento(renderLoteOption(lote));
                             setMostrarLotesMovimiento(false);
                           }}
@@ -703,6 +740,7 @@ export default function TrazabilidadPage() {
                   <input
                     type="number"
                     step="0.01"
+                    min="0"
                     name="cantidad_caracoles"
                     value={formMovimiento.cantidad_caracoles}
                     onChange={handleMovimientoChange}
@@ -715,6 +753,7 @@ export default function TrazabilidadPage() {
                   <input
                     type="number"
                     step="0.01"
+                    min="0"
                     name="cantidad_cabrillas"
                     value={formMovimiento.cantidad_cabrillas}
                     onChange={handleMovimientoChange}
@@ -869,7 +908,7 @@ export default function TrazabilidadPage() {
               <tbody>
                 {lotes.length > 0 ? (
                   lotes.map((row) => (
-                    <tr key={row.id}>
+                    <tr key={`${row.id}-${row.codigo_lote}-${row.fecha_compra}`}>
                       <td style={{ ...tdStyle, fontWeight: 800 }}>{row.codigo_lote}</td>
                       <td style={tdStyle}>{row.producto || "-"}</td>
                       <td style={tdStyle}>{row.proveedor || "-"}</td>
@@ -929,7 +968,7 @@ export default function TrazabilidadPage() {
               <tbody>
                 {movimientosOrdenados.length > 0 ? (
                   movimientosOrdenados.map((row) => (
-                    <tr key={row.id}>
+                    <tr key={`${row.id}-${row.codigo_lote}-${row.fecha_compra}`}>
                       <td style={tdStyle}>{row.fecha || "-"}</td>
                       <td style={tdStyle}>{badgeTipo(row.tipo_movimiento)}</td>
                       <td style={{ ...tdStyle, fontWeight: 700 }}>{row.codigo_lote || "-"}</td>
@@ -1119,7 +1158,7 @@ export default function TrazabilidadPage() {
                 <tbody>
                   {detalleLote.clientes?.length > 0 ? (
                     detalleLote.clientes.map((row) => (
-                      <tr key={row.id}>
+                      <tr key={`${row.id}-${row.codigo_lote}-${row.fecha_compra}`}>
                         <td style={tdStyle}>{row.nombre}</td>
                         <td style={tdStyle}>{Number(row.total_caracoles || 0).toFixed(2)}</td>
                         <td style={tdStyle}>{Number(row.total_cabrillas || 0).toFixed(2)}</td>
@@ -1159,7 +1198,7 @@ export default function TrazabilidadPage() {
                 <tbody>
                   {detalleLote.historial?.length > 0 ? (
                     detalleLote.historial.map((row) => (
-                      <tr key={row.id}>
+                      <tr key={`${row.id}-${row.codigo_lote}-${row.fecha_compra}`}>
                         <td style={tdStyle}>{row.fecha || "-"}</td>
                         <td style={tdStyle}>{badgeTipo(row.tipo_movimiento)}</td>
                         <td style={tdStyle}>{row.proveedor || "-"}</td>

@@ -35,12 +35,11 @@ function detectarProductoId(caracoles, cabrillas) {
   const tieneCaracoles = numeroSeguro(caracoles) > 0;
   const tieneCabrillas = numeroSeguro(cabrillas) > 0;
 
-  // AJUSTA ESTOS IDs SEGÚN TU TABLA productos
-  if (tieneCaracoles && tieneCabrillas) return 3; // AMBAS
-  if (tieneCaracoles) return 1; // CARACOLES
-  if (tieneCabrillas) return 2; // CABRILLAS
+  if (tieneCaracoles && tieneCabrillas) return "AMBAS";
+  if (tieneCaracoles) return "CARACOLES";
+  if (tieneCabrillas) return "CABRILLAS";
 
-  return 3;
+  return "AMBAS";
 }
 
 async function recalcularStockLote(conn, loteId) {
@@ -102,6 +101,10 @@ async function recalcularStockLote(conn, loteId) {
 }
 
 async function buscarLotePorCodigo(conn, codigoLote) {
+  const codigo = textoSeguro(codigoLote);
+
+  if (!codigo) return null;
+
   const [rows] = await conn.query(
     `SELECT
       id,
@@ -110,9 +113,9 @@ async function buscarLotePorCodigo(conn, codigoLote) {
       stock_caracoles,
       stock_cabrillas
      FROM lotes
-     WHERE codigo_lote = ?
+     WHERE TRIM(codigo_lote) = ?
      LIMIT 1`,
-    [codigoLote]
+    [codigo]
   );
 
   return rows.length ? rows[0] : null;
@@ -128,8 +131,14 @@ async function crearLoteAutomatico(conn, datos) {
     numero_albaran,
   } = datos;
 
-  const producto_id = detectarProductoId(cantidad_caracoles, cantidad_cabrillas);
+  const producto = detectarProductoId(
+    cantidad_caracoles,
+    cantidad_cabrillas
+  );
+
   const mes = obtenerMesDesdeFecha(fecha);
+
+  console.log("Creando lote automático con código:", textoSeguro(codigo_lote));
 
   const [result] = await conn.query(
     `INSERT INTO lotes (
@@ -151,10 +160,10 @@ async function crearLoteAutomatico(conn, datos) {
       fecha,
       mes,
       textoSeguro(numero_albaran) || null,
-      0,
-      0,
-      0,
-      0,
+      numeroSeguro(cantidad_caracoles),
+      numeroSeguro(cantidad_cabrillas),
+      numeroSeguro(cantidad_caracoles),
+      numeroSeguro(cantidad_cabrillas),
     ]
   );
 
@@ -162,8 +171,8 @@ async function crearLoteAutomatico(conn, datos) {
     id: result.insertId,
     codigo_lote: textoSeguro(codigo_lote),
     producto,
-    stock_caracoles: 0,
-    stock_cabrillas: 0,
+    stock_caracoles: numeroSeguro(cantidad_caracoles),
+    stock_cabrillas: numeroSeguro(cantidad_cabrillas),
   };
 }
 
@@ -275,7 +284,52 @@ async function crear(req, res) {
 
     let lote = null;
     let loteIdFinal = lote_id ? Number(lote_id) : null;
+    if (tipo === "ENTRADA") {
+      console.log("ENTRADA recibida con código:", codigoLote);
 
+      if (!codigoLote && !loteIdFinal) {
+        await conn.rollback();
+        return res.status(400).json({
+          error: "Debes indicar un código de lote en la entrada",
+        });
+      }
+
+      if (codigoLote) {
+        lote = await buscarLotePorCodigo(conn, codigoLote);
+        console.log("Resultado búsqueda lote por código:", lote);
+      }
+
+      if (!lote && loteIdFinal) {
+        const [lotesPorId] = await conn.query(
+          `SELECT
+            id,
+            codigo_lote,
+            producto,
+            stock_caracoles,
+            stock_cabrillas
+          FROM lotes
+          WHERE id = ?
+          LIMIT 1`,
+          [loteIdFinal]
+        );
+        lote = lotesPorId.length ? lotesPorId[0] : null;
+      }
+
+      if (!lote) {
+        lote = await crearLoteAutomatico(conn, {
+          codigo_lote: codigoLote,
+          proveedor_id,
+          fecha,
+          cantidad_caracoles: caracoles,
+          cantidad_cabrillas: cabrillas,
+          numero_albaran,
+        });
+
+        console.log("Lote creado automáticamente:", lote);
+      }
+
+      loteIdFinal = Number(lote.id);
+    }
     if (tipo === "ENTRADA") {
       if (!codigoLote && !loteIdFinal) {
         await conn.rollback();

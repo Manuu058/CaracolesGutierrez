@@ -5,7 +5,7 @@ import api from "../../lib/api";
 
 const estadoInicial = {
   nombre: "",
-  dni_cif: "",
+  nif_cif: "",
   telefono: "",
   email: "",
   direccion: "",
@@ -25,9 +25,14 @@ export default function ProveedoresPage() {
       const res = await api.get("/proveedores", {
         params: { busqueda },
       });
-      setProveedores(res.data || []);
-    } catch {
-      setMensaje("Error al cargar proveedores");
+      setProveedores(Array.isArray(res.data) ? res.data : []);
+    } catch (error) {
+      console.error("Error al cargar proveedores:", error);
+      setMensaje(
+        error.response?.data?.error ||
+          error.response?.data?.detalle ||
+          "Error al cargar proveedores"
+      );
     }
   }
 
@@ -56,14 +61,19 @@ export default function ProveedoresPage() {
       setEditandoId(null);
       cargarProveedores();
     } catch (error) {
-      setMensaje(error.response?.data?.error || "Error al guardar proveedor");
+      console.error("Error al guardar proveedor:", error);
+      setMensaje(
+        error.response?.data?.error ||
+          error.response?.data?.detalle ||
+          "Error al guardar proveedor"
+      );
     }
   }
 
   function editar(proveedor) {
     setForm({
       nombre: proveedor.nombre || "",
-      dni_cif: proveedor.dni_cif || "",
+      nif_cif: proveedor.nif_cif || "",
       telefono: proveedor.telefono || "",
       email: proveedor.email || "",
       direccion: proveedor.direccion || "",
@@ -82,7 +92,12 @@ export default function ProveedoresPage() {
       setMensaje("Proveedor eliminado correctamente");
       cargarProveedores();
     } catch (error) {
-      setMensaje(error.response?.data?.error || "Error al eliminar proveedor");
+      console.error("Error al eliminar proveedor:", error);
+      setMensaje(
+        error.response?.data?.error ||
+          error.response?.data?.detalle ||
+          "Error al eliminar proveedor"
+      );
     }
   }
 
@@ -410,11 +425,11 @@ export default function ProveedoresPage() {
                 </div>
 
                 <div>
-                  <label style={labelStyle}>DNI / CIF</label>
+                  <label style={labelStyle}>NIF / CIF</label>
                   <input
-                    name="dni_cif"
+                    name="nif_cif"
                     placeholder="Documento fiscal"
-                    value={form.dni_cif}
+                    value={form.nif_cif}
                     onChange={handleChange}
                     style={inputStyle}
                   />
@@ -523,7 +538,7 @@ export default function ProveedoresPage() {
 
             <div style={{ marginBottom: "16px" }}>
               <input
-                placeholder="Buscar por nombre, DNI/CIF, teléfono o tipo de producto"
+                placeholder="Buscar por nombre, NIF/CIF, teléfono o tipo de producto"
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
                 style={inputStyle}
@@ -535,7 +550,7 @@ export default function ProveedoresPage() {
                 <thead>
                   <tr>
                     <th style={thStyle}>Proveedor</th>
-                    <th style={thStyle}>DNI/CIF</th>
+                    <th style={thStyle}>NIF/CIF</th>
                     <th style={thStyle}>Teléfono</th>
                     <th style={thStyle}>Email</th>
                     <th style={thStyle}>Tipo producto</th>
@@ -549,7 +564,7 @@ export default function ProveedoresPage() {
                         <td style={{ ...tdStyle, fontWeight: 800 }}>
                           {proveedor.nombre || "-"}
                         </td>
-                        <td style={tdStyle}>{badgeDato(proveedor.dni_cif)}</td>
+                        <td style={tdStyle}>{badgeDato(proveedor.nif_cif)}</td>
                         <td style={tdStyle}>{proveedor.telefono || "-"}</td>
                         <td style={tdStyle}>{proveedor.email || "-"}</td>
                         <td style={tdStyle}>

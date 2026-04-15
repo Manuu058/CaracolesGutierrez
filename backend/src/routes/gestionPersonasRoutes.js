@@ -26,19 +26,19 @@ router.get(
 router.post(
   "/clientes",
   verificarToken,
-  permitirRoles("administrador", "encargado"),
+  permitirRoles("Administrador", "encargado"),
   clientesController.crearCliente
 );
 router.put(
   "/clientes/:id",
   verificarToken,
-  permitirRoles("administrador", "encargado"),
+  permitirRoles("Administrador", "encargado"),
   clientesController.actualizarCliente
 );
 router.delete(
   "/clientes/:id",
   verificarToken,
-  permitirRoles("administrador"),
+  permitirRoles("Administrador"),
   clientesController.eliminarCliente
 );
 
@@ -56,19 +56,19 @@ router.get(
 router.post(
   "/proveedores",
   verificarToken,
-  permitirRoles("administrador", "encargado"),
+  permitirRoles("Administrador", "encargado"),
   proveedoresController.crearProveedor
 );
 router.put(
   "/proveedores/:id",
   verificarToken,
-  permitirRoles("administrador", "encargado"),
+  permitirRoles("Administrador", "encargado"),
   proveedoresController.actualizarProveedor
 );
 router.delete(
   "/proveedores/:id",
   verificarToken,
-  permitirRoles("administrador"),
+  permitirRoles("Administrador"),
   proveedoresController.eliminarProveedor
 );
 
@@ -76,19 +76,19 @@ router.delete(
 router.get(
   "/trabajadores",
   verificarToken,
-  permitirRoles("administrador", "encargado"),
+  permitirRoles("administrador", "encargado", "Administrador"),
   trabajadoresController.listarTrabajadores
 );
 router.post(
   "/trabajadores",
   verificarToken,
-  permitirRoles("administrador"),
+  permitirRoles("Administrador"),
   trabajadoresController.crearTrabajador
 );
 router.put(
   "/trabajadores/:id",
   verificarToken,
-  permitirRoles("administrador"),
+  permitirRoles("Administrador"),
   trabajadoresController.actualizarTrabajador
 );
 
@@ -96,19 +96,19 @@ router.put(
 router.get(
   "/usuarios-sistema",
   verificarToken,
-  permitirRoles("administrador"),
+  permitirRoles("Administrador"),
   usuariosSistemaController.listarUsuarios
 );
 router.post(
   "/usuarios-sistema",
   verificarToken,
-  permitirRoles("administrador"),
+  permitirRoles("Administrador"),
   usuariosSistemaController.crearUsuario
 );
 router.put(
   "/usuarios-sistema/:id",
   verificarToken,
-  permitirRoles("administrador"),
+  permitirRoles("Administrador"),
   usuariosSistemaController.actualizarUsuario
 );
 

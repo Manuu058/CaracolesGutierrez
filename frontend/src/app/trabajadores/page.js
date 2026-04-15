@@ -21,43 +21,124 @@ export default function TrabajadoresPage() {
   const [form, setForm] = useState(inicial);
   const [editandoId, setEditandoId] = useState(null);
   const [mensaje, setMensaje] = useState("");
+  const [esError, setEsError] = useState(false);
+  const [cargando, setCargando] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      cargarTrabajadores();
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [busqueda, estado]);
+
+  function mostrarMensaje(texto, error = false) {
+    setMensaje(texto);
+    setEsError(error);
+
+    setTimeout(() => {
+      setMensaje("");
+      setEsError(false);
+    }, 3500);
+  }
 
   async function cargarTrabajadores() {
     try {
-      const res = await api.get("/trabajadores", {
-        params: { busqueda, estado },
+      setCargando(true);
+
+      const res = await api.get("/api/trabajadores", {
+        params: {
+          busqueda: busqueda || "",
+          estado: estado || "",
+        },
       });
-      setTrabajadores(res.data || []);
-    } catch {
-      setMensaje("Error al cargar trabajadores");
+
+      setTrabajadores(Array.isArray(res.data) ? res.data : []);
+    } catch (error) {
+      console.error("Error al cargar trabajadores:", error);
+      mostrarMensaje(
+        error?.response?.data?.error ||
+          `Error al cargar trabajadores (${error?.response?.status || "sin código"})`,
+        true
+      );
+    } finally {
+      setCargando(false);
     }
   }
 
-  useEffect(() => {
-    cargarTrabajadores();
-  }, [busqueda, estado]);
-
   function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]:
+        name === "dni"
+          ? value.toUpperCase()
+          : name === "email"
+          ? value.toLowerCase()
+          : value,
+    }));
+  }
+
+  function limpiarFormulario() {
+    setForm(inicial);
+    setEditandoId(null);
+  }
+
+  function validarFormulario() {
+    if (!String(form.nombre || "").trim()) {
+      mostrarMensaje("El nombre es obligatorio", true);
+      return false;
+    }
+
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      mostrarMensaje("El email no tiene un formato válido", true);
+      return false;
+    }
+
+    return true;
   }
 
   async function guardar(e) {
     e.preventDefault();
+    if (guardando) return;
+
+    if (!validarFormulario()) return;
 
     try {
+      setGuardando(true);
+
+      const payload = {
+        nombre: String(form.nombre || "").trim(),
+        apellidos: String(form.apellidos || "").trim() || null,
+        dni: String(form.dni || "").trim().toUpperCase() || null,
+        telefono: String(form.telefono || "").trim() || null,
+        email: String(form.email || "").trim().toLowerCase() || null,
+        puesto: String(form.puesto || "").trim() || null,
+        fecha_alta: form.fecha_alta || null,
+        estado: form.estado || "activo",
+      };
+
       if (editandoId) {
-        await api.put(`/trabajadores/${editandoId}`, form);
-        setMensaje("Trabajador actualizado correctamente");
+        await api.put(`/api/trabajadores/${editandoId}`, payload);
+        mostrarMensaje("Trabajador actualizado correctamente");
       } else {
-        await api.post("/trabajadores", form);
-        setMensaje("Trabajador creado correctamente");
+        await api.post("/api/trabajadores", payload);
+        mostrarMensaje("Trabajador creado correctamente");
       }
 
-      setForm(inicial);
-      setEditandoId(null);
-      cargarTrabajadores();
+      limpiarFormulario();
+      await cargarTrabajadores();
     } catch (error) {
-      setMensaje(error.response?.data?.error || "Error al guardar trabajador");
+      console.error("Error al guardar trabajador:", error);
+      mostrarMensaje(
+        error?.response?.data?.error ||
+          `Error al guardar trabajador (${error?.response?.status || "sin código"})`,
+        true
+      );
+    } finally {
+      setGuardando(false);
     }
   }
 
@@ -69,9 +150,10 @@ export default function TrabajadoresPage() {
       telefono: item.telefono || "",
       email: item.email || "",
       puesto: item.puesto || "",
-      fecha_alta: item.fecha_alta ? item.fecha_alta.slice(0, 10) : "",
+      fecha_alta: item.fecha_alta ? String(item.fecha_alta).slice(0, 10) : "",
       estado: item.estado || "activo",
     });
+
     setEditandoId(item.id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -152,9 +234,10 @@ export default function TrabajadoresPage() {
     fontSize: "14px",
     fontWeight: 800,
     color: "#fff",
-    cursor: "pointer",
+    cursor: guardando ? "not-allowed" : "pointer",
     background: "linear-gradient(135deg, #166534 0%, #15803d 100%)",
     boxShadow: "0 10px 20px rgba(22, 101, 52, 0.18)",
+    opacity: guardando ? 0.75 : 1,
   };
 
   const botonSecundario = {
@@ -359,19 +442,13 @@ export default function TrabajadoresPage() {
               ...cardStyle,
               padding: "16px 18px",
               marginBottom: "20px",
-              background: mensaje.toLowerCase().includes("error")
-                ? "#fef2f2"
-                : "#ecfdf5",
-              borderColor: mensaje.toLowerCase().includes("error")
-                ? "#fecaca"
-                : "#bbf7d0",
+              background: esError ? "#fef2f2" : "#ecfdf5",
+              borderColor: esError ? "#fecaca" : "#bbf7d0",
             }}
           >
             <div
               style={{
-                color: mensaje.toLowerCase().includes("error")
-                  ? "#b91c1c"
-                  : "#166534",
+                color: esError ? "#b91c1c" : "#166534",
                 fontWeight: 800,
               }}
             >
@@ -476,7 +553,7 @@ export default function TrabajadoresPage() {
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "1fr 1fr 1fr",
+                    gridTemplateColumns: "1fr 1fr",
                     gap: "14px",
                   }}
                 >
@@ -501,19 +578,19 @@ export default function TrabajadoresPage() {
                       style={inputStyle}
                     />
                   </div>
+                </div>
 
-                  <div>
-                    <label style={labelStyle}>Estado</label>
-                    <select
-                      name="estado"
-                      value={form.estado}
-                      onChange={handleChange}
-                      style={selectStyle}
-                    >
-                      <option value="activo">Activo</option>
-                      <option value="inactivo">Inactivo</option>
-                    </select>
-                  </div>
+                <div>
+                  <label style={labelStyle}>Estado</label>
+                  <select
+                    name="estado"
+                    value={form.estado}
+                    onChange={handleChange}
+                    style={selectStyle}
+                  >
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                  </select>
                 </div>
 
                 <div
@@ -524,18 +601,19 @@ export default function TrabajadoresPage() {
                     marginTop: "4px",
                   }}
                 >
-                  <button type="submit" style={botonPrincipal}>
-                    {editandoId ? "Actualizar trabajador" : "Crear trabajador"}
+                  <button type="submit" style={botonPrincipal} disabled={guardando}>
+                    {guardando
+                      ? "Guardando..."
+                      : editandoId
+                      ? "Actualizar trabajador"
+                      : "Crear trabajador"}
                   </button>
 
                   {editandoId ? (
                     <button
                       type="button"
                       style={botonSecundario}
-                      onClick={() => {
-                        setEditandoId(null);
-                        setForm(inicial);
-                      }}
+                      onClick={limpiarFormulario}
                     >
                       Cancelar edición
                     </button>
@@ -593,9 +671,15 @@ export default function TrabajadoresPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {trabajadores.length > 0 ? (
-                    trabajadores.map((t) => (
-                      <tr key={t.id}>
+                  {cargando ? (
+                    <tr>
+                      <td colSpan={6} style={emptyCellStyle}>
+                        Cargando trabajadores...
+                      </td>
+                    </tr>
+                  ) : trabajadores.length > 0 ? (
+                    trabajadores.map((t, index) => (
+                      <tr key={`${t.id}-${t.dni || "sin-dni"}-${index}`}>
                         <td style={{ ...tdStyle, fontWeight: 800 }}>
                           {t.nombre || "-"}
                         </td>
@@ -604,10 +688,7 @@ export default function TrabajadoresPage() {
                         <td style={tdStyle}>{badgePuesto(t.puesto)}</td>
                         <td style={tdStyle}>{badgeEstado(t.estado)}</td>
                         <td style={tdStyle}>
-                          <button
-                            onClick={() => editar(t)}
-                            style={botonEditar}
-                          >
+                          <button onClick={() => editar(t)} style={botonEditar}>
                             Editar
                           </button>
                         </td>

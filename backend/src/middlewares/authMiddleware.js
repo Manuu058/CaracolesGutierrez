@@ -10,6 +10,7 @@ function verificarToken(req, res, next) {
 
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
     req.usuario = decoded;
     next();
   } catch (error) {
@@ -19,14 +20,32 @@ function verificarToken(req, res, next) {
 
 function permitirRoles(...rolesPermitidos) {
   return (req, res, next) => {
-    if (!req.usuario || !req.usuario.roles) {
+    if (!req.usuario) {
       return res.status(403).json({ error: "No autorizado" });
     }
 
-    const tieneRol = req.usuario.roles.some((rol) => rolesPermitidos.includes(rol));
+    const permitidosNormalizados = rolesPermitidos.map((r) =>
+      String(r).toLowerCase()
+    );
+
+    let rolesUsuario = [];
+
+    if (Array.isArray(req.usuario.roles)) {
+      rolesUsuario = req.usuario.roles;
+    } else if (req.usuario.rol) {
+      rolesUsuario = [req.usuario.rol];
+    } else if (req.usuario.role) {
+      rolesUsuario = [req.usuario.role];
+    }
+
+    const tieneRol = rolesUsuario.some((rol) =>
+      permitidosNormalizados.includes(String(rol).toLowerCase())
+    );
 
     if (!tieneRol) {
-      return res.status(403).json({ error: "No tienes permisos para esta acción" });
+      return res
+        .status(403)
+        .json({ error: "No tienes permisos para esta acción" });
     }
 
     next();

@@ -5,10 +5,14 @@ import api from "../../lib/api";
 
 const estadoInicial = {
   nombre: "",
-  dni_cif: "",
   telefono: "",
   email: "",
   direccion: "",
+  empresa: "",
+  nif_cif: "",
+  persona_contacto: "",
+  iban: "",
+  metodo_pago_preferido: "",
   observaciones: "",
 };
 
@@ -24,9 +28,14 @@ export default function ClientesPage() {
       const res = await api.get("/clientes", {
         params: { busqueda },
       });
-      setClientes(res.data || []);
+      setClientes(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
-      setMensaje("Error al cargar clientes");
+      console.error("Error al cargar clientes:", error);
+      setMensaje(
+        error.response?.data?.error ||
+          error.response?.data?.detalle ||
+          "Error al cargar clientes"
+      );
     }
   }
 
@@ -55,17 +64,26 @@ export default function ClientesPage() {
       setEditandoId(null);
       cargarClientes();
     } catch (error) {
-      setMensaje(error.response?.data?.error || "Error al guardar cliente");
+      console.error("Error al guardar cliente:", error);
+      setMensaje(
+        error.response?.data?.error ||
+          error.response?.data?.detalle ||
+          "Error al guardar cliente"
+      );
     }
   }
 
   function editar(cliente) {
     setForm({
       nombre: cliente.nombre || "",
-      dni_cif: cliente.dni_cif || "",
       telefono: cliente.telefono || "",
       email: cliente.email || "",
       direccion: cliente.direccion || "",
+      empresa: cliente.empresa || "",
+      nif_cif: cliente.nif_cif || "",
+      persona_contacto: cliente.persona_contacto || "",
+      iban: cliente.iban || "",
+      metodo_pago_preferido: cliente.metodo_pago_preferido || "",
       observaciones: cliente.observaciones || "",
     });
     setEditandoId(cliente.id);
@@ -80,7 +98,12 @@ export default function ClientesPage() {
       setMensaje("Cliente eliminado correctamente");
       cargarClientes();
     } catch (error) {
-      setMensaje(error.response?.data?.error || "Error al eliminar cliente");
+      console.error("Error al eliminar cliente:", error);
+      setMensaje(
+        error.response?.data?.error ||
+          error.response?.data?.detalle ||
+          "Error al eliminar cliente"
+      );
     }
   }
 
@@ -92,7 +115,7 @@ export default function ClientesPage() {
   };
 
   const containerStyle = {
-    maxWidth: "1450px",
+    maxWidth: "1700px",
     margin: "0 auto",
   };
 
@@ -111,36 +134,44 @@ export default function ClientesPage() {
       "linear-gradient(135deg, #ffffff 0%, #f8fcf8 55%, #f0f8f1 100%)",
   };
 
+  const formCardStyle = {
+    ...cardStyle,
+    padding: "30px",
+    position: "sticky",
+    top: "20px",
+  };
+
   const inputStyle = {
     width: "100%",
-    padding: "14px 15px",
+    padding: "16px 18px",
     borderRadius: "16px",
     border: "1px solid #cfe0d0",
     background: "#fcfffc",
     color: "#111827",
     outline: "none",
-    fontSize: "14px",
+    fontSize: "15px",
     boxSizing: "border-box",
+    minHeight: "54px",
   };
 
   const textareaStyle = {
     ...inputStyle,
-    minHeight: "110px",
+    minHeight: "130px",
     resize: "vertical",
   };
 
   const labelStyle = {
     display: "block",
-    marginBottom: "8px",
+    marginBottom: "9px",
     color: "#254031",
     fontSize: "14px",
-    fontWeight: 700,
+    fontWeight: 800,
   };
 
   const sectionTitleStyle = {
     margin: 0,
-    fontSize: "22px",
-    fontWeight: 800,
+    fontSize: "24px",
+    fontWeight: 900,
     color: "#111827",
     letterSpacing: "-0.3px",
   };
@@ -155,24 +186,26 @@ export default function ClientesPage() {
   const botonPrincipal = {
     border: "none",
     borderRadius: "16px",
-    padding: "13px 18px",
+    padding: "14px 20px",
     fontSize: "14px",
     fontWeight: 800,
     color: "#fff",
     cursor: "pointer",
     background: "linear-gradient(135deg, #166534 0%, #15803d 100%)",
     boxShadow: "0 10px 20px rgba(22, 101, 52, 0.18)",
+    minWidth: "190px",
   };
 
   const botonSecundario = {
     border: "1px solid #d7e2d8",
     borderRadius: "16px",
-    padding: "13px 18px",
+    padding: "14px 20px",
     fontSize: "14px",
     fontWeight: 800,
     color: "#1f2937",
     cursor: "pointer",
     background: "#ffffff",
+    minWidth: "180px",
   };
 
   const botonEditar = {
@@ -209,7 +242,7 @@ export default function ClientesPage() {
     width: "100%",
     borderCollapse: "separate",
     borderSpacing: 0,
-    minWidth: "1100px",
+    minWidth: "1500px",
   };
 
   const thStyle = {
@@ -241,7 +274,7 @@ export default function ClientesPage() {
     textAlign: "center",
   };
 
-  function badgeDocumento(valor) {
+  function badge(valor) {
     return (
       <span
         style={{
@@ -380,33 +413,27 @@ export default function ClientesPage() {
         <section
           style={{
             display: "grid",
-            gridTemplateColumns: "1.05fr 1.35fr",
-            gap: "20px",
+            gridTemplateColumns: "560px minmax(0, 1fr)",
+            gap: "24px",
             alignItems: "start",
             marginBottom: "22px",
           }}
         >
-          <div style={{ ...cardStyle, padding: "24px" }}>
-            <div style={{ marginBottom: "18px" }}>
+          <div style={formCardStyle}>
+            <div style={{ marginBottom: "22px" }}>
               <h2 style={sectionTitleStyle}>
                 {editandoId ? "Editar cliente" : "Nuevo cliente"}
               </h2>
               <p style={sectionTextStyle}>
-                Completa la información básica del cliente con un diseño más
-                limpio y cómodo de usar.
+                Formulario más amplio, con campos grandes y mejor separados para
+                que se vea y se escriba cómodamente.
               </p>
             </div>
 
             <form onSubmit={guardarCliente}>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr",
-                  gap: "16px",
-                }}
-              >
+              <div style={{ display: "grid", gap: "18px" }}>
                 <div>
-                  <label style={labelStyle}>Nombre / razón social</label>
+                  <label style={labelStyle}>Nombre</label>
                   <input
                     name="nombre"
                     placeholder="Introduce el nombre del cliente"
@@ -417,23 +444,39 @@ export default function ClientesPage() {
                 </div>
 
                 <div>
-                  <label style={labelStyle}>DNI / CIF</label>
+                  <label style={labelStyle}>Empresa</label>
                   <input
-                    name="dni_cif"
-                    placeholder="Introduce el DNI o CIF"
-                    value={form.dni_cif}
+                    name="empresa"
+                    placeholder="Empresa o razón social"
+                    value={form.empresa}
                     onChange={handleChange}
                     style={inputStyle}
                   />
                 </div>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "14px",
-                  }}
-                >
+                <div>
+                  <label style={labelStyle}>NIF / CIF</label>
+                  <input
+                    name="nif_cif"
+                    placeholder="Introduce el NIF o CIF"
+                    value={form.nif_cif}
+                    onChange={handleChange}
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Persona de contacto</label>
+                  <input
+                    name="persona_contacto"
+                    placeholder="Nombre de la persona de contacto"
+                    value={form.persona_contacto}
+                    onChange={handleChange}
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "18px" }}>
                   <div>
                     <label style={labelStyle}>Teléfono</label>
                     <input
@@ -461,18 +504,42 @@ export default function ClientesPage() {
                   <label style={labelStyle}>Dirección</label>
                   <input
                     name="direccion"
-                    placeholder="Dirección"
+                    placeholder="Dirección completa"
                     value={form.direccion}
                     onChange={handleChange}
                     style={inputStyle}
                   />
                 </div>
 
+                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "18px" }}>
+                  <div>
+                    <label style={labelStyle}>IBAN</label>
+                    <input
+                      name="iban"
+                      placeholder="IBAN"
+                      value={form.iban}
+                      onChange={handleChange}
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={labelStyle}>Método de pago preferido</label>
+                    <input
+                      name="metodo_pago_preferido"
+                      placeholder="Ej. Transferencia, efectivo, recibo..."
+                      value={form.metodo_pago_preferido}
+                      onChange={handleChange}
+                      style={inputStyle}
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <label style={labelStyle}>Observaciones</label>
                   <textarea
                     name="observaciones"
-                    placeholder="Observaciones adicionales"
+                    placeholder="Escribe aquí cualquier observación adicional"
                     value={form.observaciones}
                     onChange={handleChange}
                     style={textareaStyle}
@@ -484,7 +551,7 @@ export default function ClientesPage() {
                     display: "flex",
                     gap: "12px",
                     flexWrap: "wrap",
-                    marginTop: "4px",
+                    marginTop: "8px",
                   }}
                 >
                   <button type="submit" style={botonPrincipal}>
@@ -512,14 +579,13 @@ export default function ClientesPage() {
             <div style={{ marginBottom: "18px" }}>
               <h2 style={sectionTitleStyle}>Buscador y listado</h2>
               <p style={sectionTextStyle}>
-                Consulta rápida de clientes con una tabla más clara, aireada y
-                fácil de leer.
+                Consulta rápida de clientes con una tabla más clara y completa.
               </p>
             </div>
 
             <div style={{ marginBottom: "16px" }}>
               <input
-                placeholder="Buscar por nombre, DNI/CIF, teléfono o email"
+                placeholder="Buscar por nombre, empresa, NIF/CIF, teléfono o email"
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
                 style={inputStyle}
@@ -530,11 +596,15 @@ export default function ClientesPage() {
               <table style={tableStyle}>
                 <thead>
                   <tr>
-                    <th style={thStyle}>Cliente</th>
-                    <th style={thStyle}>DNI/CIF</th>
+                    <th style={thStyle}>Nombre</th>
+                    <th style={thStyle}>Empresa</th>
+                    <th style={thStyle}>NIF/CIF</th>
+                    <th style={thStyle}>Contacto</th>
                     <th style={thStyle}>Teléfono</th>
                     <th style={thStyle}>Email</th>
                     <th style={thStyle}>Dirección</th>
+                    <th style={thStyle}>IBAN</th>
+                    <th style={thStyle}>Método pago</th>
                     <th style={thStyle}>Acciones</th>
                   </tr>
                 </thead>
@@ -545,10 +615,16 @@ export default function ClientesPage() {
                         <td style={{ ...tdStyle, fontWeight: 800 }}>
                           {cliente.nombre || "-"}
                         </td>
-                        <td style={tdStyle}>{badgeDocumento(cliente.dni_cif)}</td>
+                        <td style={tdStyle}>{cliente.empresa || "-"}</td>
+                        <td style={tdStyle}>{badge(cliente.nif_cif)}</td>
+                        <td style={tdStyle}>{cliente.persona_contacto || "-"}</td>
                         <td style={tdStyle}>{cliente.telefono || "-"}</td>
                         <td style={tdStyle}>{cliente.email || "-"}</td>
                         <td style={tdStyle}>{cliente.direccion || "-"}</td>
+                        <td style={tdStyle}>{cliente.iban || "-"}</td>
+                        <td style={tdStyle}>
+                          {cliente.metodo_pago_preferido || "-"}
+                        </td>
                         <td style={tdStyle}>
                           <div
                             style={{
@@ -575,7 +651,7 @@ export default function ClientesPage() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={6} style={emptyCellStyle}>
+                      <td colSpan={10} style={emptyCellStyle}>
                         No hay clientes registrados
                       </td>
                     </tr>
