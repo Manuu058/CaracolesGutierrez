@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 require("dotenv").config();
 
 const authRoutes = require("./routes/authRoutes");
@@ -15,12 +16,21 @@ const mantenimientosRoutes = require("./routes/mantenimientosRoutes");
 const ventasRoutes = require("./routes/ventasRoutes");
 const gestionPersonasRoutes = require("./routes/gestionPersonasRoutes");
 const usuariosSistemaRoutes = require("./routes/usuariosSistemaRoutes");
+const etiquetasRoutes = require("./routes/etiquetasRoutes");
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:3000"],
+    credentials: true,
+  })
+);
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/", (req, res) => {
   res.json({
@@ -42,5 +52,6 @@ app.use("/mantenimientos", mantenimientosRoutes);
 app.use("/ventas", ventasRoutes);
 app.use("/api", gestionPersonasRoutes);
 app.use("/usuarios-sistema", usuariosSistemaRoutes);
+app.use("/etiquetas", etiquetasRoutes);
 
 module.exports = app;

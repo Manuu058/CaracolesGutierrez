@@ -128,7 +128,7 @@ async function crearLoteAutomatico(conn, datos) {
     fecha,
     cantidad_caracoles,
     cantidad_cabrillas,
-    numero_albaran,
+    numero_factura,
   } = datos;
 
   const producto = detectarProductoId(
@@ -137,8 +137,6 @@ async function crearLoteAutomatico(conn, datos) {
   );
 
   const mes = obtenerMesDesdeFecha(fecha);
-
-  console.log("Creando lote automático con código:", textoSeguro(codigo_lote));
 
   const [result] = await conn.query(
     `INSERT INTO lotes (
@@ -159,7 +157,7 @@ async function crearLoteAutomatico(conn, datos) {
       Number(proveedor_id),
       fecha,
       mes,
-      textoSeguro(numero_albaran) || null,
+      textoSeguro(numero_factura) || null,
       numeroSeguro(cantidad_caracoles),
       numeroSeguro(cantidad_cabrillas),
       numeroSeguro(cantidad_caracoles),
@@ -188,7 +186,7 @@ async function listar(req, res) {
         ml.fecha,
         ml.cantidad_caracoles,
         ml.cantidad_cabrillas,
-        ml.numero_albaran,
+        ml.numero_factura,
         ml.descripcion,
         ml.usuario_id,
         l.codigo_lote,
@@ -207,11 +205,10 @@ async function listar(req, res) {
   } catch (error) {
     console.error("Error al listar movimientos:", error);
     return res.status(500).json({
-      error: "Error al listar movimientos",
+      error: error.sqlMessage || error.message || "Error al listar movimientos",
     });
   }
 }
-
 async function crear(req, res) {
   let conn;
 
@@ -228,6 +225,7 @@ async function crear(req, res) {
       fecha,
       cantidad_caracoles,
       cantidad_cabrillas,
+      numero_factura,
       numero_albaran,
       descripcion,
     } = req.body;
@@ -236,6 +234,7 @@ async function crear(req, res) {
     const codigoLote = textoSeguro(codigo_lote);
     const caracoles = numeroSeguro(cantidad_caracoles);
     const cabrillas = numeroSeguro(cantidad_cabrillas);
+    const factura = textoSeguro(numero_factura || numero_albaran);
 
     const errorCampos = validarCamposRequeridos({
       tipo_movimiento: tipo,
@@ -284,52 +283,7 @@ async function crear(req, res) {
 
     let lote = null;
     let loteIdFinal = lote_id ? Number(lote_id) : null;
-    if (tipo === "ENTRADA") {
-      console.log("ENTRADA recibida con código:", codigoLote);
 
-      if (!codigoLote && !loteIdFinal) {
-        await conn.rollback();
-        return res.status(400).json({
-          error: "Debes indicar un código de lote en la entrada",
-        });
-      }
-
-      if (codigoLote) {
-        lote = await buscarLotePorCodigo(conn, codigoLote);
-        console.log("Resultado búsqueda lote por código:", lote);
-      }
-
-      if (!lote && loteIdFinal) {
-        const [lotesPorId] = await conn.query(
-          `SELECT
-            id,
-            codigo_lote,
-            producto,
-            stock_caracoles,
-            stock_cabrillas
-          FROM lotes
-          WHERE id = ?
-          LIMIT 1`,
-          [loteIdFinal]
-        );
-        lote = lotesPorId.length ? lotesPorId[0] : null;
-      }
-
-      if (!lote) {
-        lote = await crearLoteAutomatico(conn, {
-          codigo_lote: codigoLote,
-          proveedor_id,
-          fecha,
-          cantidad_caracoles: caracoles,
-          cantidad_cabrillas: cabrillas,
-          numero_albaran,
-        });
-
-        console.log("Lote creado automáticamente:", lote);
-      }
-
-      loteIdFinal = Number(lote.id);
-    }
     if (tipo === "ENTRADA") {
       if (!codigoLote && !loteIdFinal) {
         await conn.rollback();
@@ -365,7 +319,7 @@ async function crear(req, res) {
           fecha,
           cantidad_caracoles: caracoles,
           cantidad_cabrillas: cabrillas,
-          numero_albaran,
+          numero_factura: factura,
         });
       }
 
@@ -387,9 +341,9 @@ async function crear(req, res) {
           producto,
           stock_caracoles,
           stock_cabrillas
-        FROM lotes
-        WHERE id = ?
-        FOR UPDATE`,
+         FROM lotes
+         WHERE id = ?
+         FOR UPDATE`,
         [loteIdFinal]
       );
 
@@ -409,9 +363,9 @@ async function crear(req, res) {
           producto,
           stock_caracoles,
           stock_cabrillas
-        FROM lotes
-        WHERE id = ?
-        FOR UPDATE`,
+         FROM lotes
+         WHERE id = ?
+         FOR UPDATE`,
         [loteIdFinal]
       );
 
@@ -464,7 +418,7 @@ async function crear(req, res) {
         fecha,
         cantidad_caracoles,
         cantidad_cabrillas,
-        numero_albaran,
+        numero_factura,
         descripcion,
         usuario_id
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -476,7 +430,7 @@ async function crear(req, res) {
         fecha,
         caracoles,
         cabrillas,
-        numero_albaran || null,
+        factura || null,
         descripcion || null,
         req.usuario?.id || null,
       ]
@@ -543,10 +497,7 @@ async function eliminar(req, res) {
 
     const movimiento = rows[0];
 
-    await conn.query(
-      `DELETE FROM movimientos_lote WHERE id = ?`,
-      [id]
-    );
+    await conn.query(`DELETE FROM movimientos_lote WHERE id = ?`, [id]);
 
     await recalcularStockLote(conn, Number(movimiento.lote_id));
     await conn.commit();
@@ -603,24 +554,34 @@ async function detallePorLote(req, res) {
 
     const lote = loteRows[0];
 
-    const [historialRows] = await pool.query(
-      `SELECT
-        ml.id,
-        ml.tipo_movimiento,
-        ml.fecha,
-        ml.numero_albaran,
-        ml.cantidad_caracoles,
-        ml.cantidad_cabrillas,
-        ml.descripcion,
-        p.nombre AS proveedor,
-        c.nombre AS cliente
-      FROM movimientos_lote ml
-      LEFT JOIN proveedores p ON p.id = ml.proveedor_id
-      LEFT JOIN clientes c ON c.id = ml.cliente_id
-      WHERE ml.lote_id = ?
-      ORDER BY ml.fecha DESC, ml.id DESC`,
-      [loteId]
+    const [columnas] = await pool.query(`SHOW COLUMNS FROM movimientos_lote`);
+
+    const existeNumeroFactura = columnas.some(
+      (col) => col.Field === "numero_factura"
     );
+
+    const campoFactura = existeNumeroFactura
+      ? "ml.numero_factura"
+      : "ml.numero_albaran";
+
+    const [historialRows] = await pool.query(
+        `SELECT
+          ml.id,
+          ml.tipo_movimiento,
+          ml.fecha,
+          ml.numero_factura,
+          ml.cantidad_caracoles,
+          ml.cantidad_cabrillas,
+          ml.descripcion,
+          p.nombre AS proveedor,
+          c.nombre AS cliente
+        FROM movimientos_lote ml
+        LEFT JOIN proveedores p ON p.id = ml.proveedor_id
+        LEFT JOIN clientes c ON c.id = ml.cliente_id
+        WHERE ml.lote_id = ?
+        ORDER BY ml.fecha DESC, ml.id DESC`,
+        [loteId]
+      );
 
     const [resumenRows] = await pool.query(
       `SELECT
@@ -657,7 +618,7 @@ async function detallePorLote(req, res) {
   } catch (error) {
     console.error("Error al obtener el detalle del lote:", error);
     return res.status(500).json({
-      error: "Error al obtener el detalle del lote",
+      error: error.sqlMessage || error.message || "Error al obtener el detalle del lote",
     });
   }
 }

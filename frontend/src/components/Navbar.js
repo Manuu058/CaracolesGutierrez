@@ -3,17 +3,44 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cerrarSesion, obtenerUsuario } from "../lib/auth";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
 export default function Navbar() {
   const pathname = usePathname();
   const [usuario, setUsuario] = useState(null);
   const [menuAbierto, setMenuAbierto] = useState(null);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     setUsuario(obtenerUsuario());
   }, []);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuAbierto(null);
+      }
+    }
+
+    function handleEscape(event) {
+      if (event.key === "Escape") {
+        setMenuAbierto(null);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
+  useEffect(() => {
+    setMenuAbierto(null);
+  }, [pathname]);
 
   if (pathname === "/login") return null;
 
@@ -21,6 +48,7 @@ export default function Navbar() {
     { nombre: "Inicio", ruta: "/" },
     { nombre: "Ventas", ruta: "/ventas" },
     { nombre: "Trazabilidad", ruta: "/trazabilidad" },
+    { nombre: "Etiquetas", ruta: "/etiquetas" },
     { nombre: "Vehículos", ruta: "/vehiculos" },
     {
       nombre: "Registro",
@@ -53,6 +81,7 @@ export default function Navbar() {
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
         borderBottom: "1px solid #e5e7eb",
+        boxShadow: "0 8px 20px rgba(22, 101, 52, 0.04)",
       }}
     >
       <div
@@ -87,6 +116,7 @@ export default function Navbar() {
               justifyContent: "center",
               overflow: "hidden",
               flexShrink: 0,
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.8)",
             }}
           >
             <Image
@@ -123,6 +153,7 @@ export default function Navbar() {
         </div>
 
         <nav
+          ref={menuRef}
           style={{
             display: "flex",
             alignItems: "center",
@@ -158,6 +189,9 @@ export default function Navbar() {
                         : "1px solid transparent",
                       transition: "all 0.2s ease",
                       cursor: "pointer",
+                      boxShadow: activoPadre
+                        ? "0 6px 16px rgba(22,101,52,0.08)"
+                        : "none",
                     }}
                   >
                     {modulo.nombre} ▾
@@ -199,6 +233,7 @@ export default function Navbar() {
                               border: activo
                                 ? "1px solid #bbf7d0"
                                 : "1px solid transparent",
+                              transition: "all 0.2s ease",
                             }}
                           >
                             {sub.nombre}
@@ -227,6 +262,9 @@ export default function Navbar() {
                   background: activo ? "#ecfdf5" : "transparent",
                   border: activo ? "1px solid #bbf7d0" : "1px solid transparent",
                   transition: "all 0.2s ease",
+                  boxShadow: activo
+                    ? "0 6px 16px rgba(22,101,52,0.08)"
+                    : "none",
                 }}
               >
                 {modulo.nombre}
@@ -251,6 +289,7 @@ export default function Navbar() {
               borderRadius: "12px",
               background: "#f9fafb",
               border: "1px solid #e5e7eb",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.03)",
             }}
           >
             <div
@@ -285,6 +324,7 @@ export default function Navbar() {
               fontWeight: 700,
               cursor: "pointer",
               boxShadow: "0 8px 18px rgba(22, 101, 52, 0.18)",
+              transition: "all 0.2s ease",
             }}
           >
             Cerrar sesión
