@@ -142,7 +142,9 @@ export default function VentasPage() {
       if (filtros.almacen_id) params.almacen_id = filtros.almacen_id;
       if (filtros.metodo_pago_id) params.metodo_pago_id = filtros.metodo_pago_id;
 
-      const { data } = await api.get("/ventas/resumen/semanal-productos", { params });
+      const { data } = await api.get("/ventas/resumen/semanal-productos", {
+        params,
+      });
       setResumenSemanal(data || []);
     } catch (error) {
       console.error("Error al cargar resumen semanal:", error);
@@ -157,6 +159,15 @@ export default function VentasPage() {
       setEstadoDiario(data || []);
     } catch (error) {
       console.error("Error al cargar estado diario:", error);
+    }
+  }
+
+  async function cargarTodoMensualSolo() {
+    try {
+      const { data } = await api.get("/ventas/resumen/mensual");
+      setResumenMensual(data || []);
+    } catch (error) {
+      console.error(error);
     }
   }
 
@@ -364,7 +375,6 @@ export default function VentasPage() {
           precio_unitario: Number(l.precio_unitario),
         })),
       });
-     
 
       setMensaje("Venta creada correctamente");
       setLineas([
@@ -407,19 +417,10 @@ export default function VentasPage() {
     }
   };
 
-  async function cargarTodoMensualSolo() {
-    try {
-      const { data } = await api.get("/ventas/resumen/mensual");
-      setResumenMensual(data || []);
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
   const pageStyle = {
     minHeight: "100vh",
-    background: "linear-gradient(180deg, #f8fafc 0%, #f5f7f6 100%)",
-    padding: "28px 20px 40px",
+    background: "linear-gradient(180deg, #edf7e8 0%, #f6fbf3 45%, #eef7ea 100%)",
+    padding: "28px 20px 42px",
   };
 
   const containerStyle = {
@@ -429,9 +430,15 @@ export default function VentasPage() {
 
   const cardStyle = {
     background: "#ffffff",
-    border: "1px solid #e5e7eb",
+    border: "1px solid #dcefd1",
     borderRadius: "24px",
-    boxShadow: "0 12px 30px rgba(15, 23, 42, 0.06)",
+    boxShadow: "0 10px 28px rgba(22, 101, 52, 0.06)",
+  };
+
+  const sectionCardStyle = {
+    ...cardStyle,
+    padding: "24px",
+    marginBottom: "22px",
   };
 
   const inputStyle = {
@@ -456,7 +463,7 @@ export default function VentasPage() {
 
   const sectionTitleStyle = {
     margin: 0,
-    fontSize: "22px",
+    fontSize: "24px",
     fontWeight: 800,
     color: "#111827",
   };
@@ -465,7 +472,7 @@ export default function VentasPage() {
     margin: "8px 0 0 0",
     color: "#6b7280",
     fontSize: "14px",
-    lineHeight: 1.6,
+    lineHeight: 1.65,
   };
 
   const tableContainerStyle = {
@@ -486,12 +493,14 @@ export default function VentasPage() {
   const thStyle = {
     textAlign: "left",
     padding: "16px 18px",
-    fontSize: "14px",
+    fontSize: "13px",
     fontWeight: 800,
     color: "#111827",
-    background: "#f8fafc",
+    background: "#f7fbf5",
     borderBottom: "1px solid #e5e7eb",
     whiteSpace: "nowrap",
+    textTransform: "uppercase",
+    letterSpacing: "0.4px",
   };
 
   const tdStyle = {
@@ -517,7 +526,19 @@ export default function VentasPage() {
     fontWeight: 800,
     color: "#fff",
     cursor: "pointer",
-    background: "#166534",
+    background: "linear-gradient(135deg, #166534 0%, #15803d 100%)",
+    boxShadow: "0 10px 20px rgba(22, 101, 52, 0.16)",
+  };
+
+  const botonSecundario = {
+    border: "1px solid #d1d5db",
+    borderRadius: "14px",
+    padding: "13px 18px",
+    fontSize: "14px",
+    fontWeight: 800,
+    background: "#ffffff",
+    color: "#111827",
+    cursor: "pointer",
   };
 
   function badgeMetodoPago(metodo) {
@@ -597,8 +618,9 @@ export default function VentasPage() {
         <section
           style={{
             ...cardStyle,
-            padding: "28px",
-            marginBottom: "20px",
+            padding: "30px",
+            marginBottom: "22px",
+            background: "linear-gradient(135deg, #ffffff 0%, #f7fcf4 55%, #eef8e9 100%)",
           }}
         >
           <div
@@ -610,18 +632,19 @@ export default function VentasPage() {
               flexWrap: "wrap",
             }}
           >
-            <div>
+            <div style={{ maxWidth: "820px" }}>
               <div
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  padding: "6px 12px",
+                  padding: "7px 12px",
                   borderRadius: "999px",
-                  background: "#ecfdf5",
+                  background: "#dcfce7",
                   color: "#166534",
                   fontSize: "12px",
                   fontWeight: 800,
                   marginBottom: "14px",
+                  border: "1px solid #bbf7d0",
                 }}
               >
                 Módulo de ventas
@@ -630,26 +653,25 @@ export default function VentasPage() {
               <h1
                 style={{
                   margin: 0,
-                  fontSize: "34px",
-                  lineHeight: 1.1,
+                  fontSize: "36px",
+                  lineHeight: 1.08,
                   fontWeight: 800,
                   color: "#111827",
                 }}
               >
-                Registro y control de ventas
+                Registro y control diario de ventas
               </h1>
 
               <p
                 style={{
                   margin: "12px 0 0 0",
-                  maxWidth: "760px",
                   fontSize: "15px",
-                  lineHeight: 1.7,
+                  lineHeight: 1.75,
                   color: "#6b7280",
                 }}
               >
-                Control diario de mercancía, reposiciones, filtros avanzados,
-                resumen del día y listado completo de ventas con fecha y hora.
+                Gestiona ventas, reposiciones, mercancía disponible, filtros avanzados y
+                resúmenes de actividad desde un solo panel más ordenado y claro.
               </p>
             </div>
 
@@ -658,6 +680,7 @@ export default function VentasPage() {
                 display: "flex",
                 gap: "12px",
                 flexWrap: "wrap",
+                alignItems: "center",
               }}
             >
               <button type="button" onClick={abrirModalInicio} style={botonVerde}>
@@ -668,11 +691,13 @@ export default function VentasPage() {
                 type="button"
                 onClick={abrirModalReposicion}
                 style={{
-                  ...botonVerde,
-                  background: "#1d4ed8",
+                  ...botonSecundario,
+                  border: "1px solid #bfdbfe",
+                  color: "#1d4ed8",
+                  background: "#eff6ff",
                 }}
               >
-                Reposición
+                Registrar reposición
               </button>
             </div>
           </div>
@@ -683,7 +708,7 @@ export default function VentasPage() {
             style={{
               ...cardStyle,
               padding: "16px 18px",
-              marginBottom: "20px",
+              marginBottom: "22px",
               background: mensaje.toLowerCase().includes("error")
                 ? "#fef2f2"
                 : "#ecfdf5",
@@ -708,36 +733,40 @@ export default function VentasPage() {
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
             gap: "16px",
-            marginBottom: "20px",
+            marginBottom: "22px",
           }}
         >
           {[
             {
               titulo: "Total vendido del día",
               valor: `${totalDelDia.toFixed(2)} €`,
-              fondo: "#f0fdf4",
+              fondo: "linear-gradient(180deg, #f0fdf4 0%, #ecfdf5 100%)",
+              color: "#166534",
             },
             {
               titulo: "Ventas del día",
               valor: ventasDelDia,
-              fondo: "#eff6ff",
+              fondo: "linear-gradient(180deg, #eff6ff 0%, #f8fbff 100%)",
+              color: "#1d4ed8",
             },
             {
               titulo: "Ventas registradas",
               valor: ventas.length,
-              fondo: "#ffffff",
+              fondo: "linear-gradient(180deg, #ffffff 0%, #fafafa 100%)",
+              color: "#111827",
             },
             {
-              titulo: "Unidades periodo filtrado",
+              titulo: "Unidades del periodo",
               valor: unidadesSemana,
-              fondo: "#fff7ed",
+              fondo: "linear-gradient(180deg, #fff7ed 0%, #fffbf5 100%)",
+              color: "#c2410c",
             },
           ].map((item, i) => (
             <div
               key={i}
               style={{
                 ...cardStyle,
-                padding: "20px",
+                padding: "22px",
                 background: item.fondo,
               }}
             >
@@ -755,7 +784,8 @@ export default function VentasPage() {
                 style={{
                   fontSize: "32px",
                   fontWeight: 800,
-                  color: "#111827",
+                  color: item.color,
+                  lineHeight: 1.1,
                 }}
               >
                 {item.valor}
@@ -766,213 +796,271 @@ export default function VentasPage() {
 
         <section
           style={{
-            ...cardStyle,
-            padding: "22px",
-            marginBottom: "20px",
-          }}
-        >
-          <div style={{ marginBottom: "14px" }}>
-            <h2 style={sectionTitleStyle}>Estado diario de mercancía</h2>
-            <p style={sectionTextStyle}>
-              Aquí ves cuántas bolsas quedan y cuántas se han vendido por almacén.
-            </p>
-          </div>
-
-          <div style={{ marginBottom: "16px", maxWidth: "250px" }}>
-            <label style={labelStyle}>Día</label>
-            <input
-              type="date"
-              value={diaResumen}
-              onChange={(e) => setDiaResumen(e.target.value)}
-              style={inputStyle}
-            />
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-              gap: "16px",
-            }}
-          >
-            {estadoDiario.length > 0 ? (
-              estadoDiario.map((item) => (
-                <div
-                  key={item.id}
-                  style={{
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "18px",
-                    padding: "18px",
-                    background: "#fafafa",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontWeight: 800,
-                      color: "#111827",
-                      fontSize: "18px",
-                      marginBottom: "10px",
-                    }}
-                  >
-                    {item.almacen}
-                  </div>
-
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: "10px",
-                      fontSize: "14px",
-                    }}
-                  >
-                    <div>
-                      <strong>Caracoles inicial:</strong> {Number(item.bolsas_caracoles_iniciales || 0)}
-                    </div>
-                    <div>
-                      <strong>Cabrillas inicial:</strong> {Number(item.bolsas_cabrillas_iniciales || 0)}
-                    </div>
-                    <div>
-                      <strong>Caracoles repuestos:</strong> {Number(item.bolsas_caracoles_repuestas || 0)}
-                    </div>
-                    <div>
-                      <strong>Cabrillas repuestas:</strong> {Number(item.bolsas_cabrillas_repuestas || 0)}
-                    </div>
-                    <div>
-                      <strong>Caracoles vendidos:</strong> {Number(item.bolsas_caracoles_vendidas || 0)}
-                    </div>
-                    <div>
-                      <strong>Cabrillas vendidas:</strong> {Number(item.bolsas_cabrillas_vendidas || 0)}
-                    </div>
-                    <div style={{ color: "#166534", fontWeight: 800 }}>
-                      <strong>Caracoles restantes:</strong> {Number(item.bolsas_caracoles_restantes || 0)}
-                    </div>
-                    <div style={{ color: "#166534", fontWeight: 800 }}>
-                      <strong>Cabrillas restantes:</strong> {Number(item.bolsas_cabrillas_restantes || 0)}
-                    </div>
-                    <div>
-                      <strong>Precio caracoles:</strong> {Number(item.precio_caracoles || 0).toFixed(2)} €
-                    </div>
-                    <div>
-                      <strong>Precio cabrillas:</strong> {Number(item.precio_cabrillas || 0).toFixed(2)} €
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div
-                style={{
-                  ...cardStyle,
-                  padding: "20px",
-                  gridColumn: "1 / -1",
-                }}
-              >
-                No hay venta diaria iniciada para el día seleccionado.
-              </div>
-            )}
-          </div>
-        </section>
-
-        <section
-          style={{
-            ...cardStyle,
-            padding: "22px",
-            marginBottom: "20px",
-          }}
-        >
-          <div style={{ marginBottom: "14px" }}>
-            <h2 style={sectionTitleStyle}>Filtros avanzados del listado</h2>
-            <p style={sectionTextStyle}>
-              Filtra las ventas por fechas, almacén, método de pago y estado.
-            </p>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-              gap: "16px",
-              alignItems: "end",
-            }}
-          >
-            <div>
-              <label style={labelStyle}>Desde</label>
-              <input
-                type="date"
-                name="desde"
-                value={filtros.desde}
-                onChange={handleFiltrosChange}
-                style={inputStyle}
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>Hasta</label>
-              <input
-                type="date"
-                name="hasta"
-                value={filtros.hasta}
-                onChange={handleFiltrosChange}
-                style={inputStyle}
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>Almacén</label>
-              <select
-                name="almacen_id"
-                value={filtros.almacen_id}
-                onChange={handleFiltrosChange}
-                style={inputStyle}
-              >
-                <option value="">Todos</option>
-                <option value="1">Almacén de Sevilla</option>
-                <option value="2">Almacén de Medina</option>
-              </select>
-            </div>
-
-            <div>
-              <label style={labelStyle}>Método de pago</label>
-              <select
-                name="metodo_pago_id"
-                value={filtros.metodo_pago_id}
-                onChange={handleFiltrosChange}
-                style={inputStyle}
-              >
-                <option value="">Todos</option>
-                <option value="1">Efectivo</option>
-                <option value="2">Tarjeta</option>
-                <option value="3">Bizum</option>
-              </select>
-            </div>
-
-            <div>
-              <label style={labelStyle}>Estado</label>
-              <select
-                name="estado"
-                value={filtros.estado}
-                onChange={handleFiltrosChange}
-                style={inputStyle}
-              >
-                <option value="">Todos</option>
-                <option value="ACTIVA">Activa</option>
-                <option value="ANULADA">Anulada</option>
-              </select>
-            </div>
-          </div>
-        </section>
-
-        <section
-          style={{
-            ...cardStyle,
-            padding: "24px",
+            display: "grid",
+            gridTemplateColumns: "1.1fr 0.9fr",
+            gap: "22px",
             marginBottom: "22px",
           }}
         >
-          <div style={{ marginBottom: "18px" }}>
-            <h2 style={sectionTitleStyle}>Nueva venta</h2>
-            <p style={sectionTextStyle}>
-              Puedes seguir modificando el precio en cada línea aunque exista un precio diario.
-            </p>
+          <section style={{ ...sectionCardStyle, marginBottom: 0 }}>
+            <div style={{ marginBottom: "16px" }}>
+              <h2 style={sectionTitleStyle}>Estado diario de mercancía</h2>
+              <p style={sectionTextStyle}>
+                Consulta las bolsas iniciales, repuestas, vendidas y restantes por almacén.
+              </p>
+            </div>
+
+            <div style={{ marginBottom: "18px", maxWidth: "260px" }}>
+              <label style={labelStyle}>Día</label>
+              <input
+                type="date"
+                value={diaResumen}
+                onChange={(e) => setDiaResumen(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                gap: "16px",
+              }}
+            >
+              {estadoDiario.length > 0 ? (
+                estadoDiario.map((item) => (
+                  <div
+                    key={item.id}
+                    style={{
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "20px",
+                      padding: "18px",
+                      background: "linear-gradient(180deg, #ffffff 0%, #fafdf8 100%)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontWeight: 800,
+                        color: "#111827",
+                        fontSize: "18px",
+                        marginBottom: "14px",
+                      }}
+                    >
+                      {item.almacen}
+                    </div>
+
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: "12px",
+                        fontSize: "14px",
+                      }}
+                    >
+                      <div>
+                        <strong>Caracoles inicial:</strong>{" "}
+                        {Number(item.bolsas_caracoles_iniciales || 0)}
+                      </div>
+                      <div>
+                        <strong>Cabrillas inicial:</strong>{" "}
+                        {Number(item.bolsas_cabrillas_iniciales || 0)}
+                      </div>
+                      <div>
+                        <strong>Caracoles repuestos:</strong>{" "}
+                        {Number(item.bolsas_caracoles_repuestas || 0)}
+                      </div>
+                      <div>
+                        <strong>Cabrillas repuestas:</strong>{" "}
+                        {Number(item.bolsas_cabrillas_repuestas || 0)}
+                      </div>
+                      <div>
+                        <strong>Caracoles vendidos:</strong>{" "}
+                        {Number(item.bolsas_caracoles_vendidas || 0)}
+                      </div>
+                      <div>
+                        <strong>Cabrillas vendidas:</strong>{" "}
+                        {Number(item.bolsas_cabrillas_vendidas || 0)}
+                      </div>
+                      <div
+                        style={{
+                          color: "#166534",
+                          fontWeight: 800,
+                          background: "#ecfdf5",
+                          borderRadius: "12px",
+                          padding: "8px 10px",
+                        }}
+                      >
+                        <strong>Caracoles restantes:</strong>{" "}
+                        {Number(item.bolsas_caracoles_restantes || 0)}
+                      </div>
+                      <div
+                        style={{
+                          color: "#166534",
+                          fontWeight: 800,
+                          background: "#ecfdf5",
+                          borderRadius: "12px",
+                          padding: "8px 10px",
+                        }}
+                      >
+                        <strong>Cabrillas restantes:</strong>{" "}
+                        {Number(item.bolsas_cabrillas_restantes || 0)}
+                      </div>
+                      <div>
+                        <strong>Precio caracoles:</strong>{" "}
+                        {Number(item.precio_caracoles || 0).toFixed(2)} €
+                      </div>
+                      <div>
+                        <strong>Precio cabrillas:</strong>{" "}
+                        {Number(item.precio_cabrillas || 0).toFixed(2)} €
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div
+                  style={{
+                    ...cardStyle,
+                    padding: "20px",
+                    gridColumn: "1 / -1",
+                  }}
+                >
+                  No hay venta diaria iniciada para el día seleccionado.
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section style={{ ...sectionCardStyle, marginBottom: 0 }}>
+            <div style={{ marginBottom: "16px" }}>
+              <h2 style={sectionTitleStyle}>Filtros del listado</h2>
+              <p style={sectionTextStyle}>
+                Filtra ventas por fechas, almacén, método de pago y estado.
+              </p>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr",
+                gap: "16px",
+              }}
+            >
+              <div>
+                <label style={labelStyle}>Desde</label>
+                <input
+                  type="date"
+                  name="desde"
+                  value={filtros.desde}
+                  onChange={handleFiltrosChange}
+                  style={inputStyle}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Hasta</label>
+                <input
+                  type="date"
+                  name="hasta"
+                  value={filtros.hasta}
+                  onChange={handleFiltrosChange}
+                  style={inputStyle}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Almacén</label>
+                <select
+                  name="almacen_id"
+                  value={filtros.almacen_id}
+                  onChange={handleFiltrosChange}
+                  style={inputStyle}
+                >
+                  <option value="">Todos</option>
+                  <option value="1">Almacén de Sevilla</option>
+                  <option value="2">Almacén de Medina</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Método de pago</label>
+                <select
+                  name="metodo_pago_id"
+                  value={filtros.metodo_pago_id}
+                  onChange={handleFiltrosChange}
+                  style={inputStyle}
+                >
+                  <option value="">Todos</option>
+                  <option value="1">Efectivo</option>
+                  <option value="2">Tarjeta</option>
+                  <option value="3">Bizum</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Estado</label>
+                <select
+                  name="estado"
+                  value={filtros.estado}
+                  onChange={handleFiltrosChange}
+                  style={inputStyle}
+                >
+                  <option value="">Todos</option>
+                  <option value="ACTIVA">Activa</option>
+                  <option value="ANULADA">Anulada</option>
+                </select>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section style={sectionCardStyle}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              gap: "18px",
+              flexWrap: "wrap",
+              marginBottom: "18px",
+            }}
+          >
+            <div>
+              <h2 style={sectionTitleStyle}>Nueva venta</h2>
+              <p style={sectionTextStyle}>
+                Selecciona almacén, método de pago y añade las líneas de producto.
+              </p>
+            </div>
+
+            <div
+              style={{
+                padding: "12px 16px",
+                background: "#ecfdf5",
+                border: "1px solid #bbf7d0",
+                borderRadius: "16px",
+                minWidth: "220px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  color: "#166534",
+                  marginBottom: "4px",
+                }}
+              >
+                Total actual de la venta
+              </div>
+              <div
+                style={{
+                  fontSize: "28px",
+                  fontWeight: 800,
+                  color: "#166534",
+                  lineHeight: 1,
+                }}
+              >
+                {totalVenta.toFixed(2)} €
+              </div>
+            </div>
           </div>
 
           <form onSubmit={crearVenta}>
@@ -1026,14 +1114,14 @@ export default function VentasPage() {
             {estadoActualAlmacenVenta ? (
               <div
                 style={{
-                  marginBottom: "16px",
+                  marginBottom: "18px",
                   padding: "16px",
-                  borderRadius: "16px",
-                  background: "#f8fafc",
-                  border: "1px solid #e5e7eb",
+                  borderRadius: "18px",
+                  background: "#f7fbf5",
+                  border: "1px solid #dcefd1",
                   display: "grid",
                   gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                  gap: "10px",
+                  gap: "12px",
                 }}
               >
                 <div>
@@ -1056,9 +1144,9 @@ export default function VentasPage() {
             ) : (
               <div
                 style={{
-                  marginBottom: "16px",
+                  marginBottom: "18px",
                   padding: "14px 16px",
-                  borderRadius: "14px",
+                  borderRadius: "16px",
                   background: "#fff7ed",
                   border: "1px solid #fed7aa",
                   color: "#9a3412",
@@ -1072,7 +1160,7 @@ export default function VentasPage() {
             <div
               style={{
                 borderTop: "1px solid #e5e7eb",
-                paddingTop: "18px",
+                paddingTop: "20px",
               }}
             >
               <div
@@ -1103,26 +1191,11 @@ export default function VentasPage() {
                       fontSize: "13px",
                     }}
                   >
-                    Total actual de esta venta:{" "}
-                    <strong style={{ color: "#166534" }}>
-                      {totalVenta.toFixed(2)} €
-                    </strong>
+                    Añade todos los productos incluidos en la operación.
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={agregarLinea}
-                  style={{
-                    border: "1px solid #d1d5db",
-                    borderRadius: "12px",
-                    padding: "10px 14px",
-                    background: "#ffffff",
-                    color: "#111827",
-                    cursor: "pointer",
-                    fontWeight: 700,
-                  }}
-                >
+                <button type="button" onClick={agregarLinea} style={botonSecundario}>
                   Añadir línea
                 </button>
               </div>
@@ -1135,7 +1208,7 @@ export default function VentasPage() {
                     borderRadius: "18px",
                     padding: "16px",
                     marginBottom: "14px",
-                    background: "#fafafa",
+                    background: "#fafdfa",
                   }}
                 >
                   <div
@@ -1257,7 +1330,7 @@ export default function VentasPage() {
               style={{
                 display: "flex",
                 justifyContent: "flex-end",
-                marginTop: "18px",
+                marginTop: "20px",
               }}
             >
               <button type="submit" style={botonVerde}>
@@ -1267,17 +1340,11 @@ export default function VentasPage() {
           </form>
         </section>
 
-        <section
-  style={{
-            ...cardStyle,
-            padding: "22px",
-            marginBottom: "22px",
-          }}
-        >
+        <section style={sectionCardStyle}>
           <div style={{ marginBottom: "14px" }}>
             <h2 style={sectionTitleStyle}>Listado de ventas</h2>
             <p style={sectionTextStyle}>
-              Ahora muestra fecha y hora exacta, productos, cantidades y precios.
+              Consulta el historial con fecha, hora, método de pago, detalle de productos y total.
             </p>
           </div>
 
@@ -1299,27 +1366,37 @@ export default function VentasPage() {
                   ventas.map((row, index) => (
                     <tr key={index}>
                       <td style={tdStyle}>{badgeCodigo(row.codigo_venta)}</td>
-
                       <td style={{ ...tdStyle, fontWeight: 700 }}>
                         {formatearFechaHora(row.fecha_hora)}
                       </td>
-
                       <td style={tdStyle}>{row.almacen || "-"}</td>
-
                       <td style={tdStyle}>{badgeMetodoPago(row.metodo_pago)}</td>
-
-                      <td style={{ ...tdStyle, whiteSpace: "pre-line", minWidth: "320px" }}>
-                        {row.detalle_productos
-                          ? row.detalle_productos.split(" || ").map((item, i) => (
-                              <div key={i} style={{ marginBottom: "6px" }}>
+                      <td style={{ ...tdStyle, minWidth: "360px" }}>
+                        {row.detalle_productos ? (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                            {row.detalle_productos.split(" || ").map((item, i) => (
+                              <div
+                                key={i}
+                                style={{
+                                  padding: "10px 12px",
+                                  borderRadius: "12px",
+                                  background: "#f7fbf5",
+                                  border: "1px solid #dcefd1",
+                                  fontSize: "13px",
+                                  color: "#374151",
+                                  lineHeight: 1.5,
+                                  fontWeight: 600,
+                                }}
+                              >
                                 {item}
                               </div>
-                            ))
-                          : "-"}
+                            ))}
+                          </div>
+                        ) : (
+                          "-"
+                        )}
                       </td>
-
                       <td style={tdStyle}>{badgeEstado(row.estado)}</td>
-
                       <td style={{ ...tdStyle, fontWeight: 800 }}>
                         {Number(row.total || 0).toFixed(2)} €
                       </td>
@@ -1340,22 +1417,22 @@ export default function VentasPage() {
         <section
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
-            gap: "20px",
+            gridTemplateColumns: "1.1fr 0.9fr",
+            gap: "22px",
             marginBottom: "22px",
           }}
         >
           <div
             style={{
-              ...cardStyle,
-              padding: "22px",
+              ...sectionCardStyle,
+              marginBottom: 0,
               borderLeft: "6px solid #2563eb",
             }}
           >
             <div style={{ marginBottom: "14px" }}>
               <h2 style={sectionTitleStyle}>Resumen diario</h2>
               <p style={sectionTextStyle}>
-                Selecciona el día. Por defecto está puesto el actual.
+                Selecciona el día y revisa ventas, detalle de productos y reparto por método de pago.
               </p>
             </div>
 
@@ -1370,78 +1447,92 @@ export default function VentasPage() {
             </div>
 
             <div style={tableContainerStyle}>
-                <table style={tableStyle}>
-                  <thead>
-                    <tr>
-                      <th style={thStyle}>Fecha</th>
-                      <th style={thStyle}>Almacén</th>
-                      <th style={thStyle}>Nº ventas</th>
-                      <th style={thStyle}>Productos / Cantidades / Precios</th>
-                      <th style={thStyle}>Efectivo</th>
-                      <th style={thStyle}>Tarjeta</th>
-                      <th style={thStyle}>Bizum</th>
-                      <th style={thStyle}>Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {resumenDiario.length > 0 ? (
-                      resumenDiario.map((row, index) => (
-                        <tr key={index}>
-                          <td style={tdStyle}>{row.fecha || "-"}</td>
-                          <td style={tdStyle}>{row.almacen || "-"}</td>
-                          <td style={tdStyle}>{row.numero_ventas || 0}</td>
+              <table style={tableStyle}>
+                <thead>
+                  <tr>
+                    <th style={thStyle}>Fecha</th>
+                    <th style={thStyle}>Almacén</th>
+                    <th style={thStyle}>Nº ventas</th>
+                    <th style={thStyle}>Productos / Cantidades / Precios</th>
+                    <th style={thStyle}>Efectivo</th>
+                    <th style={thStyle}>Tarjeta</th>
+                    <th style={thStyle}>Bizum</th>
+                    <th style={thStyle}>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {resumenDiario.length > 0 ? (
+                    resumenDiario.map((row, index) => (
+                      <tr key={index}>
+                        <td style={tdStyle}>{row.fecha || "-"}</td>
+                        <td style={tdStyle}>{row.almacen || "-"}</td>
+                        <td style={tdStyle}>{row.numero_ventas || 0}</td>
 
-                          <td style={{ ...tdStyle, whiteSpace: "pre-line", minWidth: "320px" }}>
-                            {row.detalle_productos
-                              ? row.detalle_productos.split(" || ").map((item, i) => (
-                                  <div key={i} style={{ marginBottom: "6px" }}>
-                                    {item}
-                                  </div>
-                                ))
-                              : "-"}
-                          </td>
+                        <td style={{ ...tdStyle, minWidth: "360px" }}>
+                          {row.detalle_productos ? (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                              {row.detalle_productos.split(" || ").map((item, i) => (
+                                <div
+                                  key={i}
+                                  style={{
+                                    padding: "10px 12px",
+                                    borderRadius: "12px",
+                                    background: "#f8fafc",
+                                    border: "1px solid #e5e7eb",
+                                    fontSize: "13px",
+                                    color: "#374151",
+                                    lineHeight: 1.5,
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  {item}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
 
-                          <td style={tdStyle}>
-                            {Number(row.total_efectivo || 0).toFixed(2)} €
-                          </td>
+                        <td style={tdStyle}>
+                          {Number(row.total_efectivo || 0).toFixed(2)} €
+                        </td>
 
-                          <td style={tdStyle}>
-                            {Number(row.total_tarjeta || 0).toFixed(2)} €
-                          </td>
+                        <td style={tdStyle}>
+                          {Number(row.total_tarjeta || 0).toFixed(2)} €
+                        </td>
 
-                          <td style={tdStyle}>
-                            {Number(row.total_bizum || 0).toFixed(2)} €
-                          </td>
+                        <td style={tdStyle}>
+                          {Number(row.total_bizum || 0).toFixed(2)} €
+                        </td>
 
-                          <td style={{ ...tdStyle, fontWeight: 800, color: "#166534" }}>
-                            {Number(row.total_vendido || 0).toFixed(2)} €
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={8} style={emptyCellStyle}>
-                          No hay datos en el resumen diario
+                        <td style={{ ...tdStyle, fontWeight: 800, color: "#166534" }}>
+                          {Number(row.total_vendido || 0).toFixed(2)} €
                         </td>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={8} style={emptyCellStyle}>
+                        No hay datos en el resumen diario
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <div
             style={{
-              ...cardStyle,
-              padding: "22px",
+              ...sectionCardStyle,
+              marginBottom: 0,
               borderLeft: "6px solid #d97706",
             }}
           >
             <div style={{ marginBottom: "14px" }}>
               <h2 style={sectionTitleStyle}>Resumen mensual</h2>
-              <p style={sectionTextStyle}>
-                Histórico mensual de ventas activas.
-              </p>
+              <p style={sectionTextStyle}>Histórico mensual de ventas activas y ticket medio.</p>
             </div>
 
             <div style={tableContainerStyle}>
@@ -1616,14 +1707,7 @@ export default function VentasPage() {
                   <button
                     type="button"
                     onClick={() => setMostrarModalInicio(false)}
-                    style={{
-                      border: "1px solid #d1d5db",
-                      borderRadius: "12px",
-                      padding: "12px 16px",
-                      background: "#fff",
-                      cursor: "pointer",
-                      fontWeight: 700,
-                    }}
+                    style={botonSecundario}
                   >
                     Cancelar
                   </button>
@@ -1741,14 +1825,7 @@ export default function VentasPage() {
                   <button
                     type="button"
                     onClick={() => setMostrarModalReposicion(false)}
-                    style={{
-                      border: "1px solid #d1d5db",
-                      borderRadius: "12px",
-                      padding: "12px 16px",
-                      background: "#fff",
-                      cursor: "pointer",
-                      fontWeight: 700,
-                    }}
+                    style={botonSecundario}
                   >
                     Cancelar
                   </button>
@@ -1756,7 +1833,7 @@ export default function VentasPage() {
                     type="submit"
                     style={{
                       ...botonVerde,
-                      background: "#1d4ed8",
+                      background: "linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)",
                     }}
                   >
                     Guardar reposición

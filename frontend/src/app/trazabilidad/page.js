@@ -84,32 +84,25 @@ export default function TrazabilidadPage() {
   }, [loteSeleccionado]);
 
   async function cargarDatos() {
-  try {
-    const movRes = await api.get("/movimientos-lote");
-    console.log("movimientos OK", movRes.data);
+    try {
+      const movRes = await api.get("/movimientos-lote");
+      const lotesRes = await api.get("/lotes");
+      const clientesRes = await api.get("/clientes");
+      const proveedoresRes = await api.get("/proveedores");
 
-    const lotesRes = await api.get("/lotes");
-    console.log("lotes OK", lotesRes.data);
-
-    const clientesRes = await api.get("/clientes");
-    console.log("clientes OK", clientesRes.data);
-
-    const proveedoresRes = await api.get("/proveedores");
-    console.log("proveedores OK", proveedoresRes.data);
-
-    setMovimientos(movRes.data || []);
-    setLotes(lotesRes.data || []);
-    setClientes(clientesRes.data || []);
-    setProveedores(proveedoresRes.data || []);
-  } catch (error) {
-    console.error("ERROR COMPLETO:", error);
-    console.error("RESPUESTA BACKEND:", error?.response?.data);
-    mostrarMensaje(
-      error?.response?.data?.error || "Error al cargar trazabilidad",
-      true
-    );
+      setMovimientos(movRes.data || []);
+      setLotes(lotesRes.data || []);
+      setClientes(clientesRes.data || []);
+      setProveedores(proveedoresRes.data || []);
+    } catch (error) {
+      console.error("ERROR COMPLETO:", error);
+      console.error("RESPUESTA BACKEND:", error?.response?.data);
+      mostrarMensaje(
+        error?.response?.data?.error || "Error al cargar trazabilidad",
+        true
+      );
+    }
   }
-}
 
   async function cargarLotes() {
     try {
@@ -263,6 +256,7 @@ export default function TrazabilidadPage() {
         numero_factura: formMovimiento.numero_factura || null,
         descripcion: formMovimiento.descripcion || null,
       };
+
       await api.post("/movimientos-lote", payload);
 
       setFormMovimiento({
@@ -477,9 +471,7 @@ export default function TrazabilidadPage() {
         doc.setPage(i);
         doc.setFontSize(9);
         doc.setTextColor(120);
-        doc.text(
-          `Caracoles Gutiérrez S.L. `,14, 289
-        );
+        doc.text(`Caracoles Gutiérrez S.L. `, 14, 289);
         doc.text(`Página ${i} de ${totalPages}`, 180, 289, { align: "right" });
       }
 
@@ -527,22 +519,42 @@ export default function TrazabilidadPage() {
       .slice(0, 12);
   }, [busquedaLoteDetalle, lotes]);
 
+  const lotesDelMes = useMemo(() => {
+    if (!filtros.mes) return [];
+    return [...lotes].sort((a, b) =>
+      String(a.codigo_lote || "").localeCompare(String(b.codigo_lote || ""))
+    );
+  }, [lotes, filtros.mes]);
+
+  const totalMesCaracoles = useMemo(() => {
+    return lotesDelMes.reduce((acc, lote) => acc + Number(lote.stock_caracoles || 0), 0);
+  }, [lotesDelMes]);
+
+  const totalMesCabrillas = useMemo(() => {
+    return lotesDelMes.reduce((acc, lote) => acc + Number(lote.stock_cabrillas || 0), 0);
+  }, [lotesDelMes]);
+
   const pageStyle = {
     minHeight: "100vh",
-    background: "#f5f7f6",
+    background: "linear-gradient(180deg, #edf7e8 0%, #f6fbf3 45%, #eef7ea 100%)",
     padding: "28px 20px 40px",
   };
 
   const containerStyle = {
-    maxWidth: "1500px",
+    maxWidth: "1520px",
     margin: "0 auto",
   };
 
   const cardStyle = {
     background: "#ffffff",
-    border: "1px solid #e5e7eb",
-    borderRadius: "22px",
-    boxShadow: "0 10px 30px rgba(15, 23, 42, 0.05)",
+    border: "1px solid #dcefd1",
+    borderRadius: "24px",
+    boxShadow: "0 10px 28px rgba(22, 101, 52, 0.06)",
+  };
+
+  const sectionCardStyle = {
+    ...cardStyle,
+    padding: "24px",
   };
 
   const inputStyle = {
@@ -565,42 +577,64 @@ export default function TrazabilidadPage() {
     fontWeight: 700,
   };
 
+  const sectionTitleStyle = {
+    margin: 0,
+    fontSize: "24px",
+    fontWeight: 800,
+    color: "#111827",
+  };
+
+  const sectionTextStyle = {
+    margin: "8px 0 0 0",
+    color: "#6b7280",
+    fontSize: "14px",
+    lineHeight: 1.65,
+  };
+
   const tableContainerStyle = {
-    background: "#ffffff",
-    border: "1px solid #e5e7eb",
-    borderRadius: "18px",
+    width: "100%",
     overflowX: "auto",
     overflowY: "hidden",
+    border: "1px solid #e5e7eb",
+    borderRadius: "18px",
+    background: "#ffffff",
   };
 
   const tableStyle = {
     width: "100%",
+    minWidth: "980px",
     borderCollapse: "separate",
     borderSpacing: 0,
-    minWidth: "1000px",
+    tableLayout: "auto",
   };
 
   const thStyle = {
     textAlign: "left",
-    padding: "16px 16px",
-    fontSize: "14px",
+    padding: "15px 16px",
+    fontSize: "12px",
     fontWeight: 800,
-    color: "#111827",
-    background: "#f8fafc",
+    color: "#6b7280",
+    background: "#f7fbf5",
     borderBottom: "1px solid #e5e7eb",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px",
     whiteSpace: "nowrap",
   };
 
   const tdStyle = {
-    padding: "16px 16px",
+    padding: "15px 16px",
     fontSize: "14px",
     color: "#374151",
     borderBottom: "1px solid #eef2f7",
     verticalAlign: "middle",
+    whiteSpace: "normal",
+    wordBreak: "break-word",
+    overflowWrap: "anywhere",
+    lineHeight: 1.5,
   };
 
   const emptyCellStyle = {
-    padding: "22px 18px",
+    padding: "24px 18px",
     fontSize: "15px",
     color: "#6b7280",
     textAlign: "center",
@@ -637,11 +671,35 @@ export default function TrazabilidadPage() {
           fontWeight: 800,
           background: esEntrada ? "#ecfdf5" : "#eff6ff",
           color: esEntrada ? "#166534" : "#1d4ed8",
+          whiteSpace: "nowrap",
         }}
       >
         {valor || "-"}
       </span>
     );
+  }
+
+  function badgeCodigo(valor) {
+    return (
+      <span
+        style={{
+          display: "inline-block",
+          padding: "6px 10px",
+          borderRadius: "999px",
+          background: "#ecfdf5",
+          color: "#166534",
+          fontWeight: 800,
+          fontSize: "12px",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {valor || "-"}
+      </span>
+    );
+  }
+
+  function numeroKg(valor) {
+    return Number(valor || 0).toFixed(2);
   }
 
   return (
@@ -650,21 +708,23 @@ export default function TrazabilidadPage() {
         <section
           style={{
             ...cardStyle,
-            padding: "28px",
-            marginBottom: "20px",
+            padding: "30px",
+            marginBottom: "22px",
+            background: "linear-gradient(135deg, #ffffff 0%, #f7fcf4 55%, #eef8e9 100%)",
           }}
         >
           <div
             style={{
               display: "inline-flex",
               alignItems: "center",
-              padding: "6px 12px",
+              padding: "7px 12px",
               borderRadius: "999px",
-              background: "#ecfdf5",
+              background: "#dcfce7",
               color: "#166534",
               fontSize: "12px",
               fontWeight: 800,
               marginBottom: "14px",
+              border: "1px solid #bbf7d0",
             }}
           >
             Módulo de trazabilidad
@@ -673,27 +733,27 @@ export default function TrazabilidadPage() {
           <h1
             style={{
               margin: 0,
-              fontSize: "34px",
-              lineHeight: 1.1,
+              fontSize: "36px",
+              lineHeight: 1.08,
               fontWeight: 800,
               color: "#111827",
             }}
           >
-            Control completo de lotes, entradas, salidas y stock por lote
+            Control completo de lotes, entradas, salidas y stock
           </h1>
 
           <p
             style={{
               marginTop: "12px",
-              maxWidth: "900px",
+              maxWidth: "920px",
               fontSize: "15px",
-              lineHeight: 1.7,
+              lineHeight: 1.75,
               color: "#6b7280",
             }}
           >
-            Gestiona lotes con mes y producto, registra entradas y salidas,
-            consulta el stock actualizado de cada lote y revisa la trazabilidad
-            completa por proveedor, cliente y movimientos.
+            Gestiona lotes por mes, proveedor y producto, registra entradas y salidas
+            y consulta toda la trazabilidad tanto por lote individual como por todos
+            los lotes de un mes completo.
           </p>
         </section>
 
@@ -702,7 +762,7 @@ export default function TrazabilidadPage() {
             style={{
               ...cardStyle,
               padding: "16px 20px",
-              marginBottom: "20px",
+              marginBottom: "22px",
               background: mensaje.toLowerCase().includes("error")
                 ? "#fef2f2"
                 : "#ecfdf5",
@@ -719,278 +779,268 @@ export default function TrazabilidadPage() {
           </section>
         ) : null}
 
-        <section
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr",
-            gap: "20px",
-            marginBottom: "20px",
-          }}
-        >
-          <div style={{ ...cardStyle, padding: "24px" }}>
-            <h2 style={{ marginTop: 0, marginBottom: "8px", fontSize: "24px", fontWeight: 800 }}>
-              Registrar movimiento
-            </h2>
-            <p style={{ margin: "0 0 18px 0", color: "#6b7280", fontSize: "14px" }}>
-              Registra entradas desde proveedor y salidas a cliente con actualización automática del stock del lote.
+        <section style={{ ...sectionCardStyle, marginBottom: "22px" }}>
+          <div style={{ marginBottom: "18px" }}>
+            <h2 style={sectionTitleStyle}>Registrar movimiento</h2>
+            <p style={sectionTextStyle}>
+              Registra entradas desde proveedor y salidas a cliente con actualización
+              automática del stock del lote.
             </p>
+          </div>
 
-            <form onSubmit={crearMovimiento}>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                  gap: "16px",
-                }}
-              >
-                <div>
-                  <label style={labelStyle}>Tipo de movimiento</label>
-                  <select
-                    name="tipo_movimiento"
-                    value={formMovimiento.tipo_movimiento}
-                    onChange={handleMovimientoChange}
-                    style={inputStyle}
-                  >
-                    <option value="SALIDA">SALIDA</option>
-                    <option value="ENTRADA">ENTRADA</option>
-                  </select>
-                </div>
+          <form onSubmit={crearMovimiento}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: "16px",
+              }}
+            >
+              <div>
+                <label style={labelStyle}>Tipo de movimiento</label>
+                <select
+                  name="tipo_movimiento"
+                  value={formMovimiento.tipo_movimiento}
+                  onChange={handleMovimientoChange}
+                  style={inputStyle}
+                >
+                  <option value="SALIDA">SALIDA</option>
+                  <option value="ENTRADA">ENTRADA</option>
+                </select>
+              </div>
 
-                <div style={{ position: "relative" }}>
-                  <label style={labelStyle}>
-                    {formMovimiento.tipo_movimiento === "ENTRADA"
-                      ? "Código de lote a crear o reutilizar"
-                      : "Lote"}
-                  </label>
-                  <input
-                    type="text"
-                    value={busquedaLoteMovimiento}
-                    onChange={(e) => {
-                      const valor = e.target.value;
-                      const esEntrada = formMovimiento.tipo_movimiento === "ENTRADA";
+              <div style={{ position: "relative" }}>
+                <label style={labelStyle}>
+                  {formMovimiento.tipo_movimiento === "ENTRADA"
+                    ? "Código de lote a crear o reutilizar"
+                    : "Lote"}
+                </label>
+                <input
+                  type="text"
+                  value={busquedaLoteMovimiento}
+                  onChange={(e) => {
+                    const valor = e.target.value;
+                    const esEntrada = formMovimiento.tipo_movimiento === "ENTRADA";
 
-                      setBusquedaLoteMovimiento(valor);
-                      setMostrarLotesMovimiento(true);
+                    setBusquedaLoteMovimiento(valor);
+                    setMostrarLotesMovimiento(true);
 
-                      if (esEntrada) {
-                        setFormMovimiento((prev) => ({
-                          ...prev,
-                          lote_id: "",
-                        }));
-                        setLoteSeleccionadoMovimiento(null);
-                        return;
-                      }
-
+                    if (esEntrada) {
                       setFormMovimiento((prev) => ({
                         ...prev,
                         lote_id: "",
                       }));
                       setLoteSeleccionadoMovimiento(null);
-                    }}
-                    onFocus={() => setMostrarLotesMovimiento(true)}
-                    onBlur={() => {
-                      setTimeout(() => {
-                        const esEntrada = formMovimiento.tipo_movimiento === "ENTRADA";
-
-                        if (!esEntrada) {
-                          if (loteSeleccionadoMovimiento?.id) {
-                            setFormMovimiento((prev) => ({
-                              ...prev,
-                              lote_id: String(loteSeleccionadoMovimiento.id),
-                            }));
-                            setBusquedaLoteMovimiento(renderLoteOption(loteSeleccionadoMovimiento));
-                          } else {
-                            setFormMovimiento((prev) => ({
-                              ...prev,
-                              lote_id: "",
-                            }));
-                          }
-                        }
-
-                        setMostrarLotesMovimiento(false);
-                      }, 150);
-                    }}
-                    placeholder={
-                      formMovimiento.tipo_movimiento === "ENTRADA"
-                        ? "Escribe el código del lote"
-                        : "Escribe código, mes, proveedor o producto"
+                      return;
                     }
-                    style={inputStyle}
-                  />
 
-                  {formMovimiento.tipo_movimiento === "SALIDA" && formMovimiento.lote_id ? (
-                    <div
-                      style={{
-                        marginTop: "8px",
-                        fontSize: "12px",
-                        fontWeight: 700,
-                        color: "#166534",
-                      }}
-                    >
-                      Lote seleccionado correctamente
-                    </div>
-                  ) : null}
-
-                  {mostrarLotesMovimiento &&
-                  lotesFiltradosMovimiento.length > 0 &&
-                  formMovimiento.tipo_movimiento === "SALIDA" ? (
-                    <div style={dropdownStyle}>
-                      {lotesFiltradosMovimiento.map((lote) => (
-                        <div
-                          key={lote.id}
-                          onMouseDown={() => {
-                            setFormMovimiento((prev) => ({
-                              ...prev,
-                              lote_id: String(lote.id),
-                            }));
-                            setLoteSeleccionadoMovimiento(lote);
-                            setBusquedaLoteMovimiento(renderLoteOption(lote));
-                            setMostrarLotesMovimiento(false);
-                          }}
-                          style={{
-                            padding: "12px 14px",
-                            cursor: "pointer",
-                            borderBottom: "1px solid #eef2f7",
-                            fontSize: "14px",
-                            color: "#111827",
-                            background: "#ffffff",
-                          }}
-                        >
-                          {renderLoteOption(lote)}
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-
-                {formMovimiento.tipo_movimiento === "ENTRADA" ? (
-                  <div>
-                    <label style={labelStyle}>Proveedor</label>
-                    <select
-                      name="proveedor_id"
-                      value={formMovimiento.proveedor_id}
-                      onChange={handleMovimientoChange}
-                      style={inputStyle}
-                    >
-                      <option value="">Selecciona proveedor</option>
-                      {proveedores.map((proveedor) => (
-                        <option key={proveedor.id} value={proveedor.id}>
-                          {proveedor.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                ) : (
-                  <div>
-                    <label style={labelStyle}>Cliente</label>
-                    <select
-                      name="cliente_id"
-                      value={formMovimiento.cliente_id}
-                      onChange={handleMovimientoChange}
-                      style={inputStyle}
-                    >
-                      <option value="">Selecciona cliente</option>
-                      {clientes.map((cliente) => (
-                        <option key={cliente.id} value={cliente.id}>
-                          {cliente.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                <div>
-                  <label style={labelStyle}>Fecha</label>
-                  <input
-                    type="date"
-                    name="fecha"
-                    value={formMovimiento.fecha}
-                    onChange={handleMovimientoChange}
-                    style={inputStyle}
-                  />
-                </div>
-
-                <div>
-                  <label style={labelStyle}>Cantidad caracoles (kg)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    name="cantidad_caracoles"
-                    value={formMovimiento.cantidad_caracoles}
-                    onChange={handleMovimientoChange}
-                    style={inputStyle}
-                  />
-                </div>
-
-                <div>
-                  <label style={labelStyle}>Cantidad cabrillas (kg)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    name="cantidad_cabrillas"
-                    value={formMovimiento.cantidad_cabrillas}
-                    onChange={handleMovimientoChange}
-                    style={inputStyle}
-                  />
-                </div>
-
-                <div>
-                  <label style={labelStyle}>Número de factura</label>
-                  <input
-                    name="numero_factura"
-                    value={formMovimiento.numero_factura}
-                    onChange={handleMovimientoChange}
-                    style={inputStyle}
-                  />
-                </div>
-
-                <div style={{ gridColumn: "1 / -1" }}>
-                  <label style={labelStyle}>Descripción</label>
-                  <textarea
-                    name="descripcion"
-                    value={formMovimiento.descripcion}
-                    onChange={handleMovimientoChange}
-                    rows={3}
-                    style={{ ...inputStyle, resize: "vertical" }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "18px" }}>
-                <button
-                  type="submit"
-                  style={{
-                    border: "none",
-                    borderRadius: "14px",
-                    padding: "14px 22px",
-                    fontSize: "15px",
-                    fontWeight: 800,
-                    color: "#fff",
-                    cursor: "pointer",
-                    background: "#166534",
-                    boxShadow: "0 10px 20px rgba(22, 101, 52, 0.18)",
+                    setFormMovimiento((prev) => ({
+                      ...prev,
+                      lote_id: "",
+                    }));
+                    setLoteSeleccionadoMovimiento(null);
                   }}
-                >
-                  Guardar movimiento
-                </button>
+                  onFocus={() => setMostrarLotesMovimiento(true)}
+                  onBlur={() => {
+                    setTimeout(() => {
+                      const esEntrada = formMovimiento.tipo_movimiento === "ENTRADA";
+
+                      if (!esEntrada) {
+                        if (loteSeleccionadoMovimiento?.id) {
+                          setFormMovimiento((prev) => ({
+                            ...prev,
+                            lote_id: String(loteSeleccionadoMovimiento.id),
+                          }));
+                          setBusquedaLoteMovimiento(
+                            renderLoteOption(loteSeleccionadoMovimiento)
+                          );
+                        } else {
+                          setFormMovimiento((prev) => ({
+                            ...prev,
+                            lote_id: "",
+                          }));
+                        }
+                      }
+
+                      setMostrarLotesMovimiento(false);
+                    }, 150);
+                  }}
+                  placeholder={
+                    formMovimiento.tipo_movimiento === "ENTRADA"
+                      ? "Escribe el código del lote"
+                      : "Escribe código, mes, proveedor o producto"
+                  }
+                  style={inputStyle}
+                />
+
+                {formMovimiento.tipo_movimiento === "SALIDA" && formMovimiento.lote_id ? (
+                  <div
+                    style={{
+                      marginTop: "8px",
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      color: "#166534",
+                    }}
+                  >
+                    Lote seleccionado correctamente
+                  </div>
+                ) : null}
+
+                {mostrarLotesMovimiento &&
+                lotesFiltradosMovimiento.length > 0 &&
+                formMovimiento.tipo_movimiento === "SALIDA" ? (
+                  <div style={dropdownStyle}>
+                    {lotesFiltradosMovimiento.map((lote) => (
+                      <div
+                        key={lote.id}
+                        onMouseDown={() => {
+                          setFormMovimiento((prev) => ({
+                            ...prev,
+                            lote_id: String(lote.id),
+                          }));
+                          setLoteSeleccionadoMovimiento(lote);
+                          setBusquedaLoteMovimiento(renderLoteOption(lote));
+                          setMostrarLotesMovimiento(false);
+                        }}
+                        style={{
+                          padding: "12px 14px",
+                          cursor: "pointer",
+                          borderBottom: "1px solid #eef2f7",
+                          fontSize: "14px",
+                          color: "#111827",
+                          background: "#ffffff",
+                        }}
+                      >
+                        {renderLoteOption(lote)}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
-            </form>
-          </div>
+
+              {formMovimiento.tipo_movimiento === "ENTRADA" ? (
+                <div>
+                  <label style={labelStyle}>Proveedor</label>
+                  <select
+                    name="proveedor_id"
+                    value={formMovimiento.proveedor_id}
+                    onChange={handleMovimientoChange}
+                    style={inputStyle}
+                  >
+                    <option value="">Selecciona proveedor</option>
+                    {proveedores.map((proveedor) => (
+                      <option key={proveedor.id} value={proveedor.id}>
+                        {proveedor.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div>
+                  <label style={labelStyle}>Cliente</label>
+                  <select
+                    name="cliente_id"
+                    value={formMovimiento.cliente_id}
+                    onChange={handleMovimientoChange}
+                    style={inputStyle}
+                  >
+                    <option value="">Selecciona cliente</option>
+                    {clientes.map((cliente) => (
+                      <option key={cliente.id} value={cliente.id}>
+                        {cliente.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label style={labelStyle}>Fecha</label>
+                <input
+                  type="date"
+                  name="fecha"
+                  value={formMovimiento.fecha}
+                  onChange={handleMovimientoChange}
+                  style={inputStyle}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Cantidad caracoles (kg)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  name="cantidad_caracoles"
+                  value={formMovimiento.cantidad_caracoles}
+                  onChange={handleMovimientoChange}
+                  style={inputStyle}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Cantidad cabrillas (kg)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  name="cantidad_cabrillas"
+                  value={formMovimiento.cantidad_cabrillas}
+                  onChange={handleMovimientoChange}
+                  style={inputStyle}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Número de factura</label>
+                <input
+                  name="numero_factura"
+                  value={formMovimiento.numero_factura}
+                  onChange={handleMovimientoChange}
+                  style={inputStyle}
+                />
+              </div>
+
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label style={labelStyle}>Descripción</label>
+                <textarea
+                  name="descripcion"
+                  value={formMovimiento.descripcion}
+                  onChange={handleMovimientoChange}
+                  rows={3}
+                  style={{ ...inputStyle, resize: "vertical" }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "18px" }}>
+              <button
+                type="submit"
+                style={{
+                  border: "none",
+                  borderRadius: "14px",
+                  padding: "14px 22px",
+                  fontSize: "15px",
+                  fontWeight: 800,
+                  color: "#fff",
+                  cursor: "pointer",
+                  background: "linear-gradient(135deg, #166534 0%, #15803d 100%)",
+                  boxShadow: "0 10px 20px rgba(22, 101, 52, 0.18)",
+                }}
+              >
+                Guardar movimiento
+              </button>
+            </div>
+          </form>
         </section>
 
-        <section
-          style={{
-            ...cardStyle,
-            padding: "20px",
-            marginBottom: "20px",
-          }}
-        >
-          <div style={{ marginBottom: "14px" }}>
-            <h2 style={{ margin: 0, fontSize: "22px", fontWeight: 800, color: "#111827" }}>
-              Filtros de lotes
-            </h2>
+        <section style={{ ...sectionCardStyle, marginBottom: "22px" }}>
+          <div style={{ marginBottom: "16px" }}>
+            <h2 style={sectionTitleStyle}>Filtros de lotes</h2>
+            <p style={sectionTextStyle}>
+              Filtra por mes, proveedor y producto. Si eliges un mes, más abajo
+              verás toda la información de todos sus lotes.
+            </p>
           </div>
 
           <div
@@ -1053,17 +1103,122 @@ export default function TrazabilidadPage() {
           </div>
         </section>
 
-        <section
-          style={{
-            ...cardStyle,
-            padding: "20px",
-            marginBottom: "20px",
-          }}
-        >
-          <div style={{ marginBottom: "14px" }}>
-            <h2 style={{ margin: 0, fontSize: "22px", fontWeight: 800, color: "#111827" }}>
-              Listado de lotes
-            </h2>
+        {filtros.mes ? (
+          <section style={{ ...sectionCardStyle, marginBottom: "22px" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                gap: "18px",
+                flexWrap: "wrap",
+                marginBottom: "18px",
+              }}
+            >
+              <div>
+                <h2 style={sectionTitleStyle}>Resumen completo de lotes del mes</h2>
+                <p style={sectionTextStyle}>
+                  Mes seleccionado: <strong>{filtros.mes}</strong>. Aquí aparece toda la
+                  información de todos los lotes encontrados para ese mes.
+                </p>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(2, minmax(180px, 1fr))",
+                  gap: "12px",
+                }}
+              >
+                <div
+                  style={{
+                    padding: "14px 16px",
+                    background: "#ecfdf5",
+                    border: "1px solid #bbf7d0",
+                    borderRadius: "16px",
+                  }}
+                >
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#166534" }}>
+                    Lotes del mes
+                  </div>
+                  <div style={{ fontSize: "28px", fontWeight: 800, color: "#166534" }}>
+                    {lotesDelMes.length}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    padding: "14px 16px",
+                    background: "#eff6ff",
+                    border: "1px solid #bfdbfe",
+                    borderRadius: "16px",
+                  }}
+                >
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#1d4ed8" }}>
+                    Stock total
+                  </div>
+                  <div style={{ fontSize: "15px", fontWeight: 800, color: "#1d4ed8" }}>
+                    C: {numeroKg(totalMesCaracoles)} · Cab: {numeroKg(totalMesCabrillas)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style={tableContainerStyle}>
+              <table style={tableStyle}>
+                <thead>
+                  <tr>
+                    <th style={thStyle}>Código</th>
+                    <th style={thStyle}>Producto</th>
+                    <th style={thStyle}>Proveedor</th>
+                    <th style={thStyle}>Fecha compra</th>
+                    <th style={thStyle}>Mes</th>
+                    <th style={thStyle}>Factura compra</th>
+                    <th style={thStyle}>Inicial caracoles</th>
+                    <th style={thStyle}>Inicial cabrillas</th>
+                    <th style={thStyle}>Stock caracoles</th>
+                    <th style={thStyle}>Stock cabrillas</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lotesDelMes.length > 0 ? (
+                    lotesDelMes.map((row) => (
+                      <tr key={`mes-${row.id}-${row.codigo_lote}`}>
+                        <td style={tdStyle}>{badgeCodigo(row.codigo_lote)}</td>
+                        <td style={{ ...tdStyle, fontWeight: 700 }}>{row.producto || "-"}</td>
+                        <td style={tdStyle}>{row.proveedor || "-"}</td>
+                        <td style={tdStyle}>{row.fecha_compra || "-"}</td>
+                        <td style={tdStyle}>{row.mes || "-"}</td>
+                        <td style={tdStyle}>{row.factura_compra || "-"}</td>
+                        <td style={tdStyle}>{numeroKg(row.cantidad_caracoles)}</td>
+                        <td style={tdStyle}>{numeroKg(row.cantidad_cabrillas)}</td>
+                        <td style={{ ...tdStyle, fontWeight: 800, color: "#166534" }}>
+                          {numeroKg(row.stock_caracoles)}
+                        </td>
+                        <td style={{ ...tdStyle, fontWeight: 800, color: "#166534" }}>
+                          {numeroKg(row.stock_cabrillas)}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={10} style={emptyCellStyle}>
+                        No hay lotes para el mes seleccionado
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : null}
+
+        <section style={{ ...sectionCardStyle, marginBottom: "22px" }}>
+          <div style={{ marginBottom: "16px" }}>
+            <h2 style={sectionTitleStyle}>Listado de lotes</h2>
+            <p style={sectionTextStyle}>
+              Relación de lotes según los filtros actuales.
+            </p>
           </div>
 
           <div style={tableContainerStyle}>
@@ -1084,18 +1239,14 @@ export default function TrazabilidadPage() {
                 {lotes.length > 0 ? (
                   lotes.map((row) => (
                     <tr key={`${row.id}-${row.codigo_lote}-${row.fecha_compra}`}>
-                      <td style={{ ...tdStyle, fontWeight: 800 }}>{row.codigo_lote}</td>
-                      <td style={tdStyle}>{row.producto || "-"}</td>
+                      <td style={tdStyle}>{badgeCodigo(row.codigo_lote)}</td>
+                      <td style={{ ...tdStyle, fontWeight: 700 }}>{row.producto || "-"}</td>
                       <td style={tdStyle}>{row.proveedor || "-"}</td>
                       <td style={tdStyle}>{row.fecha_compra || "-"}</td>
                       <td style={tdStyle}>{row.mes || "-"}</td>
                       <td style={tdStyle}>{row.factura_compra || "-"}</td>
-                      <td style={{ ...tdStyle, fontWeight: 800 }}>
-                        {Number(row.stock_caracoles || 0).toFixed(2)}
-                      </td>
-                      <td style={{ ...tdStyle, fontWeight: 800 }}>
-                        {Number(row.stock_cabrillas || 0).toFixed(2)}
-                      </td>
+                      <td style={{ ...tdStyle, fontWeight: 800 }}>{numeroKg(row.stock_caracoles)}</td>
+                      <td style={{ ...tdStyle, fontWeight: 800 }}>{numeroKg(row.stock_cabrillas)}</td>
                     </tr>
                   ))
                 ) : (
@@ -1110,17 +1261,12 @@ export default function TrazabilidadPage() {
           </div>
         </section>
 
-        <section
-          style={{
-            ...cardStyle,
-            padding: "20px",
-            marginBottom: "20px",
-          }}
-        >
-          <div style={{ marginBottom: "14px" }}>
-            <h2 style={{ margin: 0, fontSize: "22px", fontWeight: 800, color: "#111827" }}>
-              Historial general de movimientos
-            </h2>
+        <section style={{ ...sectionCardStyle, marginBottom: "22px" }}>
+          <div style={{ marginBottom: "16px" }}>
+            <h2 style={sectionTitleStyle}>Historial general de movimientos</h2>
+            <p style={sectionTextStyle}>
+              Todos los movimientos registrados con su lote, proveedor, cliente y cantidades.
+            </p>
           </div>
 
           <div style={tableContainerStyle}>
@@ -1152,8 +1298,8 @@ export default function TrazabilidadPage() {
                       <td style={tdStyle}>{row.proveedor || "-"}</td>
                       <td style={tdStyle}>{row.cliente || "-"}</td>
                       <td style={tdStyle}>{row.numero_factura || "-"}</td>
-                      <td style={tdStyle}>{Number(row.cantidad_caracoles || 0).toFixed(2)}</td>
-                      <td style={tdStyle}>{Number(row.cantidad_cabrillas || 0).toFixed(2)}</td>
+                      <td style={tdStyle}>{numeroKg(row.cantidad_caracoles)}</td>
+                      <td style={tdStyle}>{numeroKg(row.cantidad_cabrillas)}</td>
                       <td style={tdStyle}>
                         <button
                           onClick={() => eliminarMovimiento(row.id)}
@@ -1165,6 +1311,7 @@ export default function TrazabilidadPage() {
                             color: "#b91c1c",
                             cursor: "pointer",
                             fontWeight: 700,
+                            whiteSpace: "nowrap",
                           }}
                         >
                           Eliminar
@@ -1184,17 +1331,15 @@ export default function TrazabilidadPage() {
           </div>
         </section>
 
-        <section style={{ ...cardStyle, padding: "20px" }}>
+        <section style={sectionCardStyle}>
           <div style={{ marginBottom: "16px" }}>
-            <h2 style={{ margin: 0, fontSize: "22px", fontWeight: 800, color: "#111827" }}>
-              Detalle completo del lote
-            </h2>
-            <p style={{ margin: "8px 0 0 0", color: "#6b7280", fontSize: "14px" }}>
-              Escribe para buscar un lote y ver proveedor, cantidades, stock, historial y clientes que han recibido mercancía.
+            <h2 style={sectionTitleStyle}>Detalle completo del lote</h2>
+            <p style={sectionTextStyle}>
+              Busca un lote concreto para ver proveedor, cantidades, stock, clientes y su historial completo.
             </p>
           </div>
 
-          <div style={{ marginBottom: "18px", maxWidth: "520px", position: "relative" }}>
+          <div style={{ marginBottom: "18px", maxWidth: "560px", position: "relative" }}>
             <label style={labelStyle}>Buscar lote</label>
             <input
               type="text"
@@ -1272,7 +1417,7 @@ export default function TrazabilidadPage() {
                 fontWeight: 800,
                 color: "#fff",
                 cursor: "pointer",
-                background: "#166534",
+                background: "linear-gradient(135deg, #166534 0%, #15803d 100%)",
                 boxShadow: "0 10px 20px rgba(22, 101, 52, 0.18)",
               }}
             >
@@ -1295,14 +1440,14 @@ export default function TrazabilidadPage() {
               ["Fecha compra", detalleLote.lote?.fecha_compra || "-"],
               ["Mes", detalleLote.lote?.mes || "-"],
               ["Factura compra", detalleLote.lote?.factura_compra || "-"],
-              ["Inicial caracoles", Number(detalleLote.lote?.cantidad_caracoles || 0).toFixed(2)],
-              ["Inicial cabrillas", Number(detalleLote.lote?.cantidad_cabrillas || 0).toFixed(2)],
-              ["Entradas caracoles", Number(detalleLote.resumen?.total_entradas_caracoles || 0).toFixed(2)],
-              ["Entradas cabrillas", Number(detalleLote.resumen?.total_entradas_cabrillas || 0).toFixed(2)],
-              ["Salidas caracoles", Number(detalleLote.resumen?.total_salidas_caracoles || 0).toFixed(2)],
-              ["Salidas cabrillas", Number(detalleLote.resumen?.total_salidas_cabrillas || 0).toFixed(2)],
-              ["Stock caracoles", Number(detalleLote.lote?.stock_caracoles || 0).toFixed(2)],
-              ["Stock cabrillas", Number(detalleLote.lote?.stock_cabrillas || 0).toFixed(2)],
+              ["Inicial caracoles", numeroKg(detalleLote.lote?.cantidad_caracoles)],
+              ["Inicial cabrillas", numeroKg(detalleLote.lote?.cantidad_cabrillas)],
+              ["Entradas caracoles", numeroKg(detalleLote.resumen?.total_entradas_caracoles)],
+              ["Entradas cabrillas", numeroKg(detalleLote.resumen?.total_entradas_cabrillas)],
+              ["Salidas caracoles", numeroKg(detalleLote.resumen?.total_salidas_caracoles)],
+              ["Salidas cabrillas", numeroKg(detalleLote.resumen?.total_salidas_cabrillas)],
+              ["Stock caracoles", numeroKg(detalleLote.lote?.stock_caracoles)],
+              ["Stock cabrillas", numeroKg(detalleLote.lote?.stock_cabrillas)],
             ].map(([titulo, valor]) => (
               <div
                 key={titulo}
@@ -1355,8 +1500,8 @@ export default function TrazabilidadPage() {
                     detalleLote.clientes.map((row) => (
                       <tr key={row.id}>
                         <td style={tdStyle}>{row.nombre}</td>
-                        <td style={tdStyle}>{Number(row.total_caracoles || 0).toFixed(2)}</td>
-                        <td style={tdStyle}>{Number(row.total_cabrillas || 0).toFixed(2)}</td>
+                        <td style={tdStyle}>{numeroKg(row.total_caracoles)}</td>
+                        <td style={tdStyle}>{numeroKg(row.total_cabrillas)}</td>
                       </tr>
                     ))
                   ) : (
@@ -1399,8 +1544,8 @@ export default function TrazabilidadPage() {
                         <td style={tdStyle}>{row.proveedor || "-"}</td>
                         <td style={tdStyle}>{row.cliente || "-"}</td>
                         <td style={tdStyle}>{row.numero_factura || "-"}</td>
-                        <td style={tdStyle}>{Number(row.cantidad_caracoles || 0).toFixed(2)}</td>
-                        <td style={tdStyle}>{Number(row.cantidad_cabrillas || 0).toFixed(2)}</td>
+                        <td style={tdStyle}>{numeroKg(row.cantidad_caracoles)}</td>
+                        <td style={tdStyle}>{numeroKg(row.cantidad_cabrillas)}</td>
                         <td style={tdStyle}>{row.descripcion || "-"}</td>
                       </tr>
                     ))

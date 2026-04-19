@@ -150,6 +150,7 @@ export default function UsuariosPage() {
           fontWeight: 800,
           background: activo ? "#ecfdf5" : "#fef2f2",
           color: activo ? "#166534" : "#b91c1c",
+          whiteSpace: "nowrap",
         }}
       >
         {valor || "-"}
@@ -159,41 +160,44 @@ export default function UsuariosPage() {
 
   const pageStyle = {
     minHeight: "100vh",
-    background:
-      "linear-gradient(180deg, #f4f8f4 0%, #eef6ef 45%, #f7faf7 100%)",
+    background: "linear-gradient(180deg, #edf7e8 0%, #f6fbf3 45%, #eef7ea 100%)",
     padding: "28px 20px 40px",
   };
 
   const containerStyle = {
-    maxWidth: "1550px",
+    maxWidth: "1520px",
     margin: "0 auto",
   };
 
   const cardStyle = {
     background: "#ffffff",
-    border: "1px solid #dfe8df",
+    border: "1px solid #dcefd1",
     borderRadius: "24px",
-    boxShadow: "0 14px 40px rgba(21, 53, 37, 0.06)",
+    boxShadow: "0 10px 28px rgba(22, 101, 52, 0.06)",
+  };
+
+  const sectionCardStyle = {
+    ...cardStyle,
+    padding: "24px",
   };
 
   const heroStyle = {
     ...cardStyle,
     padding: "30px",
-    marginBottom: "20px",
-    background:
-      "linear-gradient(135deg, #ffffff 0%, #f8fcf8 55%, #eef8ef 100%)",
+    marginBottom: "22px",
+    background: "linear-gradient(135deg, #ffffff 0%, #f7fcf4 55%, #eef8e9 100%)",
   };
 
   const inputStyle = {
     width: "100%",
     minHeight: "50px",
     padding: "14px 15px",
-    borderRadius: "16px",
-    border: "1px solid #cfe0d0",
-    background: "#fcfffc",
+    borderRadius: "14px",
+    border: "1px solid #d1d5db",
+    background: "#ffffff",
     color: "#111827",
     outline: "none",
-    fontSize: "15px",
+    fontSize: "14px",
     boxSizing: "border-box",
   };
 
@@ -208,30 +212,29 @@ export default function UsuariosPage() {
   const labelStyle = {
     display: "block",
     marginBottom: "8px",
-    color: "#254031",
+    color: "#374151",
     fontSize: "14px",
     fontWeight: 700,
   };
 
   const sectionTitleStyle = {
     margin: 0,
-    fontSize: "22px",
+    fontSize: "24px",
     fontWeight: 800,
     color: "#111827",
-    letterSpacing: "-0.3px",
   };
 
   const sectionTextStyle = {
     margin: "8px 0 0 0",
     color: "#6b7280",
     fontSize: "14px",
-    lineHeight: 1.6,
+    lineHeight: 1.65,
   };
 
   const botonPrincipal = {
     border: "none",
-    borderRadius: "16px",
-    padding: "13px 18px",
+    borderRadius: "14px",
+    padding: "14px 20px",
     fontSize: "14px",
     fontWeight: 800,
     color: "#fff",
@@ -241,12 +244,12 @@ export default function UsuariosPage() {
   };
 
   const botonSecundario = {
-    border: "1px solid #d7e2d8",
-    borderRadius: "16px",
-    padding: "13px 18px",
+    border: "1px solid #d1d5db",
+    borderRadius: "14px",
+    padding: "14px 20px",
     fontSize: "14px",
     fontWeight: 800,
-    color: "#1f2937",
+    color: "#111827",
     cursor: "pointer",
     background: "#ffffff",
   };
@@ -274,40 +277,45 @@ export default function UsuariosPage() {
   };
 
   const tableContainerStyle = {
-    background: "#ffffff",
-    border: "1px solid #e3ebe4",
-    borderRadius: "20px",
+    width: "100%",
     overflowX: "auto",
     overflowY: "hidden",
+    border: "1px solid #e5e7eb",
+    borderRadius: "18px",
+    background: "#ffffff",
   };
 
   const tableStyle = {
     width: "100%",
+    minWidth: "1180px",
     borderCollapse: "separate",
     borderSpacing: 0,
-    minWidth: "1200px",
+    tableLayout: "auto",
   };
 
   const thStyle = {
     textAlign: "left",
-    padding: "17px 18px",
-    fontSize: "13px",
+    padding: "15px 16px",
+    fontSize: "12px",
     fontWeight: 800,
-    color: "#1f2937",
-    background: "#f6faf6",
-    borderBottom: "1px solid #e5ece6",
-    whiteSpace: "nowrap",
+    color: "#6b7280",
+    background: "#f7fbf5",
+    borderBottom: "1px solid #e5e7eb",
     textTransform: "uppercase",
-    letterSpacing: "0.4px",
+    letterSpacing: "0.5px",
+    whiteSpace: "nowrap",
   };
 
   const tdStyle = {
-    padding: "17px 18px",
+    padding: "15px 16px",
     fontSize: "14px",
     color: "#374151",
-    borderBottom: "1px solid #eef3ef",
+    borderBottom: "1px solid #eef2f7",
     verticalAlign: "middle",
-    background: "#ffffff",
+    whiteSpace: "normal",
+    wordBreak: "break-word",
+    overflowWrap: "anywhere",
+    lineHeight: 1.5,
   };
 
   const emptyCellStyle = {
@@ -330,18 +338,19 @@ export default function UsuariosPage() {
               flexWrap: "wrap",
             }}
           >
-            <div>
+            <div style={{ maxWidth: "860px" }}>
               <div
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
                   padding: "7px 12px",
                   borderRadius: "999px",
-                  background: "#ecfdf5",
+                  background: "#dcfce7",
                   color: "#166534",
                   fontSize: "12px",
                   fontWeight: 800,
                   marginBottom: "14px",
+                  border: "1px solid #bbf7d0",
                 }}
               >
                 Registro · Usuarios del sistema
@@ -350,11 +359,10 @@ export default function UsuariosPage() {
               <h1
                 style={{
                   margin: 0,
-                  fontSize: "34px",
+                  fontSize: "36px",
                   lineHeight: 1.08,
-                  fontWeight: 900,
+                  fontWeight: 800,
                   color: "#111827",
-                  letterSpacing: "-0.8px",
                 }}
               >
                 Gestión segura y uniforme de accesos
@@ -365,38 +373,38 @@ export default function UsuariosPage() {
                   margin: "12px 0 0 0",
                   maxWidth: "820px",
                   fontSize: "15px",
-                  lineHeight: 1.7,
+                  lineHeight: 1.75,
                   color: "#6b7280",
                 }}
               >
-                Administra usuarios, datos básicos y estado de acceso desde una
-                pantalla homogénea con el resto de módulos.
+                Administra usuarios, estado de acceso y datos básicos desde una
+                pantalla homogénea con el resto de módulos del sistema.
               </p>
             </div>
 
             <div
               style={{
+                padding: "14px 16px",
+                background: "#ecfdf5",
+                border: "1px solid #bbf7d0",
+                borderRadius: "16px",
                 minWidth: "220px",
-                padding: "18px 20px",
-                borderRadius: "20px",
-                background: "#f3fbf4",
-                border: "1px solid #dcebdd",
               }}
             >
               <div
                 style={{
-                  fontSize: "13px",
+                  fontSize: "12px",
                   fontWeight: 700,
-                  color: "#5b6b5f",
-                  marginBottom: "10px",
+                  color: "#166534",
+                  marginBottom: "4px",
                 }}
               >
                 Total registrados
               </div>
               <div
                 style={{
-                  fontSize: "34px",
-                  fontWeight: 900,
+                  fontSize: "30px",
+                  fontWeight: 800,
                   color: "#166534",
                   lineHeight: 1,
                 }}
@@ -412,7 +420,7 @@ export default function UsuariosPage() {
             style={{
               ...cardStyle,
               padding: "16px 18px",
-              marginBottom: "20px",
+              marginBottom: "22px",
               background: mensaje.toLowerCase().includes("error")
                 ? "#fef2f2"
                 : "#ecfdf5",
@@ -437,24 +445,74 @@ export default function UsuariosPage() {
         <section
           style={{
             display: "grid",
-            gridTemplateColumns: "1.05fr 1.35fr",
-            gap: "20px",
+            gridTemplateColumns: "1.02fr 1.38fr",
+            gap: "22px",
             alignItems: "start",
             marginBottom: "22px",
           }}
         >
-          <div style={{ ...cardStyle, padding: "24px" }}>
-            <div style={{ marginBottom: "18px" }}>
-              <h2 style={sectionTitleStyle}>
-                {editandoId ? "Editar usuario" : "Nuevo usuario"}
-              </h2>
-              <p style={sectionTextStyle}>
-                Formulario con campos más amplios y claros.
-              </p>
+          <section style={sectionCardStyle}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                gap: "18px",
+                flexWrap: "wrap",
+                marginBottom: "18px",
+              }}
+            >
+              <div>
+                <h2 style={sectionTitleStyle}>
+                  {editandoId ? "Editar usuario" : "Nuevo usuario"}
+                </h2>
+                <p style={sectionTextStyle}>
+                  Formulario claro y alineado con el resto de pantallas.
+                </p>
+              </div>
+
+              {editandoId ? (
+                <div
+                  style={{
+                    padding: "12px 16px",
+                    background: "#eff6ff",
+                    border: "1px solid #bfdbfe",
+                    borderRadius: "16px",
+                    minWidth: "170px",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      color: "#1d4ed8",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    Modo edición
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "16px",
+                      fontWeight: 800,
+                      color: "#1d4ed8",
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    Usuario seleccionado
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             <form onSubmit={guardar}>
-              <div style={{ display: "grid", gap: "16px" }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: "16px",
+                }}
+              >
                 <div>
                   <label style={labelStyle}>Nombre</label>
                   <input
@@ -508,7 +566,7 @@ export default function UsuariosPage() {
                     name="password"
                     placeholder={
                       editandoId
-                        ? "Déjalo vacío si no quieres cambiarla"
+                        ? "Déjala vacía si no quieres cambiarla"
                         : "Introduce la contraseña"
                     }
                     value={form.password}
@@ -540,45 +598,45 @@ export default function UsuariosPage() {
                     <option value="inactivo">Inactivo</option>
                   </select>
                 </div>
+              </div>
 
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "12px",
-                    flexWrap: "wrap",
-                    marginTop: "4px",
-                  }}
-                >
-                  <button type="submit" style={botonPrincipal}>
-                    {editandoId ? "Actualizar usuario" : "Crear usuario"}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  flexWrap: "wrap",
+                  marginTop: "20px",
+                }}
+              >
+                <button type="submit" style={botonPrincipal}>
+                  {editandoId ? "Actualizar usuario" : "Crear usuario"}
+                </button>
+
+                {editandoId ? (
+                  <button
+                    type="button"
+                    style={botonSecundario}
+                    onClick={limpiarFormulario}
+                  >
+                    Cancelar edición
                   </button>
-
-                  {editandoId ? (
-                    <button
-                      type="button"
-                      style={botonSecundario}
-                      onClick={limpiarFormulario}
-                    >
-                      Cancelar edición
-                    </button>
-                  ) : null}
-                </div>
+                ) : null}
               </div>
             </form>
-          </div>
+          </section>
 
-          <div style={{ ...cardStyle, padding: "24px" }}>
+          <section style={sectionCardStyle}>
             <div style={{ marginBottom: "18px" }}>
               <h2 style={sectionTitleStyle}>Buscador y listado</h2>
               <p style={sectionTextStyle}>
-                Visual más clara y lectura más cómoda.
+                Busca por nombre, correo o usuario y filtra por estado.
               </p>
             </div>
 
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "1.4fr 0.8fr",
+                gridTemplateColumns: "1.35fr 0.8fr",
                 gap: "14px",
                 marginBottom: "16px",
               }}
@@ -663,7 +721,7 @@ export default function UsuariosPage() {
                 </tbody>
               </table>
             </div>
-          </div>
+          </section>
         </section>
       </div>
     </main>

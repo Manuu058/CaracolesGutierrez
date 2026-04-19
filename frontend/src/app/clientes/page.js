@@ -101,85 +101,106 @@ export default function ClientesPage() {
     }
   }
 
+  function badge(valor) {
+    return (
+      <span
+        style={{
+          display: "inline-block",
+          padding: "7px 12px",
+          borderRadius: "999px",
+          background: "#f0fdf4",
+          color: "#166534",
+          fontWeight: 800,
+          fontSize: "12px",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {valor || "-"}
+      </span>
+    );
+  }
+
   const pageStyle = {
     minHeight: "100vh",
-    background:
-      "linear-gradient(180deg, #f4f8f4 0%, #eef6ef 45%, #f7faf7 100%)",
+    background: "linear-gradient(180deg, #edf7e8 0%, #f6fbf3 45%, #eef7ea 100%)",
     padding: "28px 20px 40px",
   };
 
   const containerStyle = {
-    maxWidth: "1700px",
+    maxWidth: "1520px",
     margin: "0 auto",
   };
 
   const cardStyle = {
     background: "#ffffff",
-    border: "1px solid #dfe8df",
+    border: "1px solid #dcefd1",
     borderRadius: "24px",
-    boxShadow: "0 14px 40px rgba(21, 53, 37, 0.06)",
+    boxShadow: "0 10px 28px rgba(22, 101, 52, 0.06)",
   };
 
   const heroStyle = {
     ...cardStyle,
     padding: "30px",
-    marginBottom: "20px",
-    background:
-      "linear-gradient(135deg, #ffffff 0%, #f8fcf8 55%, #f0f8f1 100%)",
+    marginBottom: "22px",
+    background: "linear-gradient(135deg, #ffffff 0%, #f7fcf4 55%, #eef8e9 100%)",
+  };
+
+  const sectionCardStyle = {
+    ...cardStyle,
+    padding: "24px",
   };
 
   const formCardStyle = {
     ...cardStyle,
-    padding: "30px",
+    padding: "24px",
     position: "sticky",
     top: "20px",
   };
 
   const inputStyle = {
     width: "100%",
-    padding: "16px 18px",
-    borderRadius: "16px",
-    border: "1px solid #cfe0d0",
-    background: "#fcfffc",
+    minHeight: "50px",
+    padding: "14px 15px",
+    borderRadius: "14px",
+    border: "1px solid #d1d5db",
+    background: "#ffffff",
     color: "#111827",
     outline: "none",
-    fontSize: "15px",
+    fontSize: "14px",
     boxSizing: "border-box",
-    minHeight: "54px",
   };
 
   const textareaStyle = {
     ...inputStyle,
-    minHeight: "130px",
+    minHeight: "120px",
     resize: "vertical",
   };
 
   const labelStyle = {
     display: "block",
-    marginBottom: "9px",
-    color: "#254031",
+    marginBottom: "8px",
+    color: "#374151",
     fontSize: "14px",
-    fontWeight: 800,
+    fontWeight: 700,
   };
 
   const sectionTitleStyle = {
     margin: 0,
     fontSize: "24px",
-    fontWeight: 900,
+    fontWeight: 800,
     color: "#111827",
-    letterSpacing: "-0.3px",
   };
 
   const sectionTextStyle = {
     margin: "8px 0 0 0",
     color: "#6b7280",
     fontSize: "14px",
-    lineHeight: 1.6,
+    lineHeight: 1.65,
   };
 
   const botonPrincipal = {
     border: "none",
-    borderRadius: "16px",
+    borderRadius: "14px",
     padding: "14px 20px",
     fontSize: "14px",
     fontWeight: 800,
@@ -191,12 +212,12 @@ export default function ClientesPage() {
   };
 
   const botonSecundario = {
-    border: "1px solid #d7e2d8",
-    borderRadius: "16px",
+    border: "1px solid #d1d5db",
+    borderRadius: "14px",
     padding: "14px 20px",
     fontSize: "14px",
     fontWeight: 800,
-    color: "#1f2937",
+    color: "#111827",
     cursor: "pointer",
     background: "#ffffff",
     minWidth: "180px",
@@ -225,40 +246,45 @@ export default function ClientesPage() {
   };
 
   const tableContainerStyle = {
-    background: "#ffffff",
-    border: "1px solid #e3ebe4",
-    borderRadius: "20px",
+    width: "100%",
     overflowX: "auto",
     overflowY: "hidden",
+    border: "1px solid #e5e7eb",
+    borderRadius: "18px",
+    background: "#ffffff",
   };
 
   const tableStyle = {
     width: "100%",
+    minWidth: "1200px",
     borderCollapse: "separate",
     borderSpacing: 0,
-    minWidth: "1200px",
+    tableLayout: "auto",
   };
 
   const thStyle = {
     textAlign: "left",
-    padding: "17px 18px",
-    fontSize: "13px",
+    padding: "15px 16px",
+    fontSize: "12px",
     fontWeight: 800,
-    color: "#1f2937",
-    background: "#f6faf6",
-    borderBottom: "1px solid #e5ece6",
-    whiteSpace: "nowrap",
+    color: "#6b7280",
+    background: "#f7fbf5",
+    borderBottom: "1px solid #e5e7eb",
     textTransform: "uppercase",
-    letterSpacing: "0.4px",
+    letterSpacing: "0.5px",
+    whiteSpace: "nowrap",
   };
 
   const tdStyle = {
-    padding: "17px 18px",
+    padding: "15px 16px",
     fontSize: "14px",
     color: "#374151",
-    borderBottom: "1px solid #eef3ef",
+    borderBottom: "1px solid #eef2f7",
     verticalAlign: "middle",
-    background: "#ffffff",
+    whiteSpace: "normal",
+    wordBreak: "break-word",
+    overflowWrap: "anywhere",
+    lineHeight: 1.5,
   };
 
   const emptyCellStyle = {
@@ -267,24 +293,6 @@ export default function ClientesPage() {
     color: "#6b7280",
     textAlign: "center",
   };
-
-  function badge(valor) {
-    return (
-      <span
-        style={{
-          display: "inline-block",
-          padding: "7px 12px",
-          borderRadius: "999px",
-          background: "#f0fdf4",
-          color: "#166534",
-          fontWeight: 800,
-          fontSize: "12px",
-        }}
-      >
-        {valor || "-"}
-      </span>
-    );
-  }
 
   return (
     <main style={pageStyle}>
@@ -299,18 +307,19 @@ export default function ClientesPage() {
               flexWrap: "wrap",
             }}
           >
-            <div>
+            <div style={{ maxWidth: "860px" }}>
               <div
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
                   padding: "7px 12px",
                   borderRadius: "999px",
-                  background: "#ecfdf5",
+                  background: "#dcfce7",
                   color: "#166534",
                   fontSize: "12px",
                   fontWeight: 800,
                   marginBottom: "14px",
+                  border: "1px solid #bbf7d0",
                 }}
               >
                 Registro · Clientes
@@ -319,11 +328,10 @@ export default function ClientesPage() {
               <h1
                 style={{
                   margin: 0,
-                  fontSize: "34px",
+                  fontSize: "36px",
                   lineHeight: 1.08,
-                  fontWeight: 900,
+                  fontWeight: 800,
                   color: "#111827",
-                  letterSpacing: "-0.8px",
                 }}
               >
                 Gestión clara y profesional de clientes
@@ -334,7 +342,7 @@ export default function ClientesPage() {
                   margin: "12px 0 0 0",
                   maxWidth: "820px",
                   fontSize: "15px",
-                  lineHeight: 1.7,
+                  lineHeight: 1.75,
                   color: "#6b7280",
                 }}
               >
@@ -346,27 +354,27 @@ export default function ClientesPage() {
 
             <div
               style={{
+                padding: "14px 16px",
+                background: "#ecfdf5",
+                border: "1px solid #bbf7d0",
+                borderRadius: "16px",
                 minWidth: "220px",
-                padding: "18px 20px",
-                borderRadius: "20px",
-                background: "#f3fbf4",
-                border: "1px solid #dcebdd",
               }}
             >
               <div
                 style={{
-                  fontSize: "13px",
+                  fontSize: "12px",
                   fontWeight: 700,
-                  color: "#5b6b5f",
-                  marginBottom: "10px",
+                  color: "#166534",
+                  marginBottom: "4px",
                 }}
               >
                 Total registrados
               </div>
               <div
                 style={{
-                  fontSize: "34px",
-                  fontWeight: 900,
+                  fontSize: "30px",
+                  fontWeight: 800,
                   color: "#166534",
                   lineHeight: 1,
                 }}
@@ -382,7 +390,7 @@ export default function ClientesPage() {
             style={{
               ...cardStyle,
               padding: "16px 18px",
-              marginBottom: "20px",
+              marginBottom: "22px",
               background: mensaje.toLowerCase().includes("error")
                 ? "#fef2f2"
                 : "#ecfdf5",
@@ -413,19 +421,62 @@ export default function ClientesPage() {
             marginBottom: "22px",
           }}
         >
-          <div style={formCardStyle}>
-            <div style={{ marginBottom: "22px" }}>
-              <h2 style={sectionTitleStyle}>
-                {editandoId ? "Editar cliente" : "Nuevo cliente"}
-              </h2>
-              <p style={sectionTextStyle}>
-                Formulario más amplio, con campos grandes y mejor separados para
-                que se vea y se escriba cómodamente.
-              </p>
+          <section style={formCardStyle}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                gap: "18px",
+                flexWrap: "wrap",
+                marginBottom: "22px",
+              }}
+            >
+              <div>
+                <h2 style={sectionTitleStyle}>
+                  {editandoId ? "Editar cliente" : "Nuevo cliente"}
+                </h2>
+                <p style={sectionTextStyle}>
+                  Formulario amplio, cómodo y alineado con el resto del sistema.
+                </p>
+              </div>
+
+              {editandoId ? (
+                <div
+                  style={{
+                    padding: "12px 16px",
+                    background: "#eff6ff",
+                    border: "1px solid #bfdbfe",
+                    borderRadius: "16px",
+                    minWidth: "170px",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      color: "#1d4ed8",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    Modo edición
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "16px",
+                      fontWeight: 800,
+                      color: "#1d4ed8",
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    Cliente seleccionado
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             <form onSubmit={guardarCliente}>
-              <div style={{ display: "grid", gap: "18px" }}>
+              <div style={{ display: "grid", gap: "16px" }}>
                 <div>
                   <label style={labelStyle}>Nombre</label>
                   <input
@@ -530,13 +581,13 @@ export default function ClientesPage() {
                 </div>
               </div>
             </form>
-          </div>
+          </section>
 
-          <div style={{ ...cardStyle, padding: "24px" }}>
+          <section style={sectionCardStyle}>
             <div style={{ marginBottom: "18px" }}>
               <h2 style={sectionTitleStyle}>Buscador y listado</h2>
               <p style={sectionTextStyle}>
-                Consulta rápida de clientes con una tabla más clara y completa.
+                Consulta rápida de clientes con una tabla clara y bien integrada.
               </p>
             </div>
 
@@ -610,7 +661,7 @@ export default function ClientesPage() {
                 </tbody>
               </table>
             </div>
-          </div>
+          </section>
         </section>
       </div>
     </main>

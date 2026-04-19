@@ -7,8 +7,6 @@ import api from "../lib/api";
 export default function HomePage() {
   const [dashboard, setDashboard] = useState({
     ventasHoy: { numeroVentas: 0, totalVendido: 0 },
-    ultimasVentas: [],
-    stockBajo: [],
     proximosMantenimientos: [],
   });
 
@@ -30,8 +28,6 @@ export default function HomePage() {
       );
       setDashboard({
         ventasHoy: { numeroVentas: 0, totalVendido: 0 },
-        ultimasVentas: [],
-        stockBajo: [],
         proximosMantenimientos: [],
       });
     } finally {
@@ -39,84 +35,74 @@ export default function HomePage() {
     }
   }
 
-  const pageStyle = {
-    minHeight: "100vh",
-    background: "#f5f7f6",
-    padding: "28px 20px 40px",
-  };
-
-  const containerStyle = {
-    maxWidth: "1400px",
-    margin: "0 auto",
-  };
-
-  const sectionCard = {
-    background: "#ffffff",
-    border: "1px solid #e5e7eb",
-    borderRadius: "22px",
-    boxShadow: "0 10px 30px rgba(15, 23, 42, 0.05)",
-  };
-
-  const tableContainerStyle = {
-    background: "#ffffff",
-    border: "1px solid #e5e7eb",
-    borderRadius: "18px",
-    overflow: "hidden",
-  };
-
-  const tableStyle = {
-    width: "100%",
-    borderCollapse: "separate",
-    borderSpacing: 0,
-    tableLayout: "fixed",
-  };
-
-  const thStyle = {
-    textAlign: "left",
-    padding: "18px 18px",
-    fontSize: "14px",
-    fontWeight: 800,
-    color: "#111827",
-    background: "#f8fafc",
-    borderBottom: "1px solid #e5e7eb",
-    whiteSpace: "nowrap",
-  };
-
-  const tdStyle = {
-    padding: "18px 18px",
-    fontSize: "14px",
-    color: "#374151",
-    borderBottom: "1px solid #eef2f7",
-    verticalAlign: "middle",
-  };
-
-  const emptyCellStyle = {
-    padding: "22px 18px",
-    fontSize: "15px",
-    color: "#6b7280",
-    textAlign: "center",
-  };
-
-  const metricCards = [
+  const kpis = [
     {
-      title: "Ventas de hoy",
+      label: "Ventas hoy",
       value: dashboard.ventasHoy?.numeroVentas || 0,
-      subtitle: "Número de operaciones registradas hoy",
+      sub: "Operaciones registradas",
+      color: "green",
+      icon: (
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+          <path
+            d="M4 18l4-5 4 3 4-7 4 4"
+            stroke="#166534"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      ),
     },
     {
-      title: "Facturación diaria",
-      value: `${Number(dashboard.ventasHoy?.totalVendido || 0).toFixed(2)} €`,
-      subtitle: "Importe total vendido en la jornada",
+      label: "Facturación",
+      value: `${Number(dashboard.ventasHoy?.totalVendido || 0)
+        .toFixed(2)
+        .replace(".", ",")} €`,
+      sub: "Importe total del día",
+      color: "emerald",
+      icon: (
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+          <rect
+            x="3"
+            y="7"
+            width="18"
+            height="12"
+            rx="3"
+            stroke="#166534"
+            strokeWidth="1.8"
+          />
+          <path
+            d="M8 7V5.8A4 4 0 0 1 12 2a4 4 0 0 1 4 3.8V7"
+            stroke="#166534"
+            strokeWidth="1.8"
+          />
+        </svg>
+      ),
     },
     {
-      title: "Stock bajo",
-      value: dashboard.stockBajo?.length || 0,
-      subtitle: "Productos pendientes de reposición",
-    },
-    {
-      title: "Mantenimientos próximos",
+      label: "Mantenimientos",
       value: dashboard.proximosMantenimientos?.length || 0,
-      subtitle: "Vehículos que requieren atención",
+      sub: "Vehículos pendientes",
+      color: "orange",
+      icon: (
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
+          <rect
+            x="3"
+            y="4"
+            width="18"
+            height="17"
+            rx="3"
+            stroke="#b45309"
+            strokeWidth="1.8"
+          />
+          <path
+            d="M8 2v4M16 2v4M3 10h18"
+            stroke="#b45309"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+        </svg>
+      ),
     },
   ];
 
@@ -124,58 +110,43 @@ export default function HomePage() {
     {
       nombre: "Ventas",
       ruta: "/ventas",
-      descripcion: "Registrar ventas y consultar resúmenes diarios y mensuales",
+      descripcion: "Registra ventas y consulta resúmenes diarios, semanales y mensuales",
+      emoji: "🛒",
     },
     {
       nombre: "Trazabilidad",
       ruta: "/trazabilidad",
-      descripcion: "Controlar lotes, entradas, salidas y stock",
+      descripcion: "Controla lotes, entradas, salidas y stock de mercancía",
+      emoji: "📦",
     },
     {
       nombre: "Vehículos",
       ruta: "/vehiculos",
-      descripcion: "Gestionar la flota y los próximos mantenimientos",
+      descripcion: "Gestiona la flota, revisiones, averías y mantenimientos",
+      emoji: "🚛",
     },
   ];
 
-  function renderBadgeEstadoStock(estado) {
-    return (
-      <span
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          minWidth: "90px",
-          padding: "8px 14px",
-          borderRadius: "999px",
-          fontSize: "12px",
-          fontWeight: 800,
-          background: "#fef2f2",
-          color: "#b91c1c",
-          letterSpacing: "0.3px",
-        }}
-      >
-        {estado || "BAJO"}
-      </span>
-    );
-  }
+  function BadgeEstado({ estado }) {
+    const styles = {
+      VENCIDO: {
+        background: "#fef2f2",
+        color: "#b91c1c",
+        border: "1px solid #fecaca",
+      },
+      PROXIMO: {
+        background: "#fff7ed",
+        color: "#c2410c",
+        border: "1px solid #fed7aa",
+      },
+      "EN FECHA": {
+        background: "#ecfdf5",
+        color: "#166534",
+        border: "1px solid #bbf7d0",
+      },
+    };
 
-  function renderBadgeEstadoFecha(estado) {
-    const estilo =
-      estado === "VENCIDO"
-        ? {
-            background: "#fef2f2",
-            color: "#b91c1c",
-          }
-        : estado === "PROXIMO"
-        ? {
-            background: "#fff7ed",
-            color: "#c2410c",
-          }
-        : {
-            background: "#ecfdf5",
-            color: "#166534",
-          };
+    const style = styles[estado] || styles["EN FECHA"];
 
     return (
       <span
@@ -183,13 +154,12 @@ export default function HomePage() {
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
-          minWidth: "100px",
-          padding: "8px 14px",
+          padding: "6px 12px",
           borderRadius: "999px",
-          fontSize: "12px",
-          fontWeight: 800,
-          letterSpacing: "0.3px",
-          ...estilo,
+          fontSize: "11px",
+          fontWeight: 700,
+          letterSpacing: "0.2px",
+          ...style,
         }}
       >
         {estado || "EN FECHA"}
@@ -197,385 +167,510 @@ export default function HomePage() {
     );
   }
 
+  const iconBg = {
+    green: "linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)",
+    emerald: "linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)",
+    orange: "linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%)",
+  };
+
   return (
-    <main style={pageStyle}>
-      <div style={containerStyle}>
+    <main
+      style={{
+        minHeight: "100vh",
+        padding: "32px 22px 50px",
+        background:
+          "linear-gradient(180deg, #edf7e8 0%, #f6fbf3 45%, #eef7ea 100%)",
+        fontFamily: "var(--font-sans, sans-serif)",
+      }}
+    >
+      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
         {/* CABECERA */}
         <section
           style={{
-            ...sectionCard,
-            padding: "28px",
-            marginBottom: "22px",
+            position: "relative",
+            overflow: "hidden",
+            background:
+              "linear-gradient(135deg, #ffffff 0%, #f7fcf4 50%, #eef8e9 100%)",
+            borderRadius: "26px",
+            border: "1px solid #d7ebcb",
+            padding: "34px 34px 30px",
+            marginBottom: "24px",
+            boxShadow: "0 10px 30px rgba(22, 101, 52, 0.08)",
           }}
         >
           <div
             style={{
+              position: "absolute",
+              top: "-60px",
+              right: "-40px",
+              width: "220px",
+              height: "220px",
+              borderRadius: "50%",
+              background: "rgba(134, 239, 172, 0.18)",
+              pointerEvents: "none",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: "-70px",
+              left: "-50px",
+              width: "180px",
+              height: "180px",
+              borderRadius: "50%",
+              background: "rgba(187, 247, 208, 0.18)",
+              pointerEvents: "none",
+            }}
+          />
+
+          <div
+            style={{
+              position: "relative",
+              zIndex: 1,
               display: "flex",
               justifyContent: "space-between",
-              alignItems: "flex-start",
+              alignItems: "center",
               gap: "20px",
               flexWrap: "wrap",
             }}
           >
-            <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "18px" }}>
               <div
                 style={{
-                  display: "inline-flex",
-                  alignItems: "center",
+                  height: "72px",
                   padding: "6px 12px",
-                  borderRadius: "999px",
-                  background: "#ecfdf5",
-                  color: "#166534",
-                  fontSize: "12px",
-                  fontWeight: 800,
-                  marginBottom: "14px",
+                  background: "#ffffff",
+                  borderRadius: "14px",
+                  border: "1px solid #e5e7eb",
+                  display: "flex",
+                  alignItems: "center",
+                  boxShadow: "0 6px 18px rgba(0,0,0,0.05)",
                 }}
               >
-                Panel principal
+                <img
+                  src="/logo.png"
+                  alt="Caracoles Gutierrez"
+                  style={{
+                    height: "100%",
+                    width: "auto",
+                    objectFit: "contain",
+                  }}
+                />
               </div>
 
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: "34px",
-                  lineHeight: 1.1,
-                  fontWeight: 800,
-                  color: "#111827",
-                  letterSpacing: "-0.5px",
-                }}
-              >
-                Vista general del negocio
-              </h2>
-
-              <p
-                style={{
-                  margin: "12px 0 0 0",
-                  maxWidth: "760px",
-                  color: "#6b7280",
-                  fontSize: "15px",
-                  lineHeight: 1.7,
-                }}
-              >
-                Consulta los indicadores principales, revisa avisos importantes y
-                entra rápidamente en los módulos principales desde un entorno
-                mucho más claro, limpio y fácil de usar.
-              </p>
+              <div>
+                <p
+                  style={{
+                    margin: "0 0 8px",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    letterSpacing: "1.1px",
+                    textTransform: "uppercase",
+                    color: "#15803d",
+                  }}
+                >
+                  Panel principal
+                </p>
+                <h1
+                  style={{
+                    fontSize: "30px",
+                    lineHeight: 1.1,
+                    fontWeight: 700,
+                    color: "#111827",
+                    margin: 0,
+                  }}
+                >
+                  Caracoles Gutiérrez S.L.
+                </h1>
+                <p
+                  style={{
+                    fontSize: "14px",
+                    color: "#6b7280",
+                    margin: "8px 0 0",
+                    lineHeight: 1.6,
+                  }}
+                >
+                  Gestión comercial, trazabilidad de lotes y control operativo
+                  diario · Medina Sidonia, Cádiz · Sevilla
+                </p>
+              </div>
             </div>
 
             <div
               style={{
                 display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-end",
                 gap: "12px",
                 flexWrap: "wrap",
               }}
             >
-              <Link
-                href="/ventas"
+              <span
                 style={{
-                  textDecoration: "none",
-                  padding: "12px 16px",
-                  borderRadius: "14px",
-                  background: "#166534",
-                  color: "#fff",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "8px 14px",
+                  borderRadius: "999px",
+                  background: "#dcfce7",
+                  color: "#166534",
+                  fontSize: "12px",
                   fontWeight: 700,
-                  fontSize: "14px",
-                  boxShadow: "0 10px 20px rgba(22, 101, 52, 0.15)",
+                  border: "1px solid #bbf7d0",
                 }}
               >
-                Nueva venta
-              </Link>
+                <span
+                  style={{
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    background: "#16a34a",
+                    display: "inline-block",
+                    boxShadow: "0 0 0 4px rgba(34, 197, 94, 0.15)",
+                  }}
+                />
+                Sistema en línea
+              </span>
 
-              <Link
-                href="/trazabilidad"
-                style={{
-                  textDecoration: "none",
-                  padding: "12px 16px",
-                  borderRadius: "14px",
-                  background: "#f9fafb",
-                  color: "#111827",
-                  border: "1px solid #e5e7eb",
-                  fontWeight: 700,
-                  fontSize: "14px",
-                }}
-              >
-                Ir a trazabilidad
-              </Link>
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                <Link
+                  href="/ventas"
+                  style={{
+                    padding: "12px 18px",
+                    borderRadius: "14px",
+                    background: "linear-gradient(135deg, #166534 0%, #15803d 100%)",
+                    color: "#fff",
+                    fontSize: "14px",
+                    fontWeight: 700,
+                    textDecoration: "none",
+                    boxShadow: "0 10px 20px rgba(22, 101, 52, 0.18)",
+                  }}
+                >
+                  + Nueva venta
+                </Link>
+                <Link
+                  href="/trazabilidad"
+                  style={{
+                    padding: "12px 18px",
+                    borderRadius: "14px",
+                    background: "#ffffff",
+                    color: "#166534",
+                    fontSize: "14px",
+                    fontWeight: 700,
+                    border: "1px solid #bbf7d0",
+                    textDecoration: "none",
+                    boxShadow: "0 6px 16px rgba(22, 101, 52, 0.06)",
+                  }}
+                >
+                  Ir a trazabilidad
+                </Link>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* KPIS */}
+        {/* KPIs */}
         <section
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
             gap: "16px",
-            marginBottom: "22px",
+            marginBottom: "24px",
           }}
         >
-          {metricCards.map((item, index) => (
+          {kpis.map((kpi) => (
             <div
-              key={index}
+              key={kpi.label}
               style={{
-                ...sectionCard,
-                padding: "22px",
+                background: "#ffffff",
+                borderRadius: "22px",
+                border: "1px solid #dcefd1",
+                padding: "24px",
+                boxShadow: "0 8px 24px rgba(22, 101, 52, 0.05)",
               }}
             >
               <div
                 style={{
-                  fontSize: "13px",
+                  width: "48px",
+                  height: "48px",
+                  borderRadius: "14px",
+                  background: iconBg[kpi.color],
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: "16px",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.5)",
+                }}
+              >
+                {kpi.icon}
+              </div>
+
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: "#6b7280",
                   fontWeight: 700,
-                  color: "#6b7280",
-                  marginBottom: "10px",
+                  marginBottom: "8px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.8px",
                 }}
               >
-                {item.title}
+                {kpi.label}
               </div>
 
               <div
                 style={{
-                  fontSize: typeof item.value === "string" ? "28px" : "34px",
+                  fontSize: "32px",
                   fontWeight: 800,
                   color: "#111827",
-                  lineHeight: 1,
-                  marginBottom: "10px",
+                  lineHeight: 1.05,
+                  marginBottom: "6px",
                 }}
               >
-                {item.value}
+                {kpi.value}
               </div>
 
-              <div
-                style={{
-                  fontSize: "13px",
-                  color: "#6b7280",
-                  lineHeight: 1.5,
-                }}
-              >
-                {item.subtitle}
+              <div style={{ fontSize: "13px", color: "#6b7280", lineHeight: 1.5 }}>
+                {kpi.sub}
               </div>
             </div>
           ))}
         </section>
 
-        {/* ACCESOS */}
+        {/* ACCESOS RÁPIDOS */}
         <section
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-            gap: "16px",
-            marginBottom: "22px",
+            marginBottom: "24px",
           }}
         >
-          {accesos.map((item) => (
-            <Link
-              key={item.ruta}
-              href={item.ruta}
+          <div style={{ marginBottom: "14px" }}>
+            <h2
               style={{
-                ...sectionCard,
-                textDecoration: "none",
-                padding: "22px",
-                display: "block",
+                margin: 0,
+                fontSize: "18px",
+                fontWeight: 700,
+                color: "#111827",
               }}
             >
-              <div
-                style={{
-                  fontSize: "20px",
-                  fontWeight: 800,
-                  color: "#111827",
-                  marginBottom: "10px",
-                }}
-              >
-                {item.nombre}
-              </div>
+              Módulos principales
+            </h2>
+            <p
+              style={{
+                margin: "6px 0 0",
+                fontSize: "13px",
+                color: "#6b7280",
+              }}
+            >
+              Acceso rápido a las áreas más utilizadas del sistema
+            </p>
+          </div>
 
-              <p
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+              gap: "16px",
+            }}
+          >
+            {accesos.map((item) => (
+              <Link
+                key={item.ruta}
+                href={item.ruta}
                 style={{
-                  margin: 0,
-                  color: "#6b7280",
-                  fontSize: "14px",
-                  lineHeight: 1.6,
+                  background:
+                    "linear-gradient(180deg, #ffffff 0%, #fbfef9 100%)",
+                  borderRadius: "22px",
+                  border: "1px solid #dcefd1",
+                  padding: "22px",
+                  textDecoration: "none",
+                  display: "block",
+                  boxShadow: "0 8px 24px rgba(22, 101, 52, 0.05)",
                 }}
               >
-                {item.descripcion}
-              </p>
-            </Link>
-          ))}
+                <div
+                  style={{
+                    width: "50px",
+                    height: "50px",
+                    borderRadius: "16px",
+                    background: "#ecfdf5",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "24px",
+                    marginBottom: "14px",
+                    border: "1px solid #d1fae5",
+                  }}
+                >
+                  {item.emoji}
+                </div>
+
+                <div
+                  style={{
+                    fontSize: "17px",
+                    fontWeight: 700,
+                    color: "#111827",
+                    marginBottom: "8px",
+                  }}
+                >
+                  {item.nombre}
+                </div>
+
+                <p
+                  style={{
+                    margin: 0,
+                    color: "#6b7280",
+                    fontSize: "13px",
+                    lineHeight: 1.7,
+                  }}
+                >
+                  {item.descripcion}
+                </p>
+              </Link>
+            ))}
+          </div>
         </section>
 
-        {/* TABLAS */}
+        {/* TABLA MANTENIMIENTOS */}
         <section
           style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "18px",
+            background: "#ffffff",
+            borderRadius: "22px",
+            border: "1px solid #dcefd1",
+            overflow: "hidden",
+            boxShadow: "0 8px 24px rgba(22, 101, 52, 0.05)",
           }}
         >
-          {/* STOCK BAJO */}
           <div
             style={{
-              ...sectionCard,
-              padding: "20px",
+              padding: "22px 24px 18px",
+              borderBottom: "1px solid #edf6e8",
+              background: "linear-gradient(180deg, #fcfefb 0%, #f7fcf5 100%)",
             }}
           >
-            <div style={{ marginBottom: "14px" }}>
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: "22px",
-                  fontWeight: 800,
-                  color: "#111827",
-                }}
-              >
-                Stock bajo
-              </h3>
-              <p
-                style={{
-                  margin: "8px 0 0 0",
-                  color: "#6b7280",
-                  fontSize: "14px",
-                  lineHeight: 1.6,
-                }}
-              >
-                Productos que necesitan reposición o control.
-              </p>
-            </div>
-
-            <div style={tableContainerStyle}>
-              <table style={tableStyle}>
-                <colgroup>
-                  <col style={{ width: "36%" }} />
-                  <col style={{ width: "18%" }} />
-                  <col style={{ width: "18%" }} />
-                  <col style={{ width: "28%" }} />
-                </colgroup>
-
-                <thead>
-                  <tr>
-                    <th style={thStyle}>Producto</th>
-                    <th style={thStyle}>Unidad</th>
-                    <th style={thStyle}>Stock</th>
-                    <th style={thStyle}>Estado</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {(dashboard.stockBajo || []).length > 0 ? (
-                    dashboard.stockBajo
-                      .filter((item) => item.producto !== "Caldo")
-                      .map((item, index) => (
-                      <tr key={index}>
-                        <td style={{ ...tdStyle, fontWeight: 700, color: "#111827" }}>
-                          {item.producto}
-                        </td>
-                        <td style={tdStyle}>{item.unidad_medida}</td>
-                        <td style={{ ...tdStyle, fontWeight: 700 }}>
-                          {Number(item.stock_total || 0).toFixed(2)}
-                        </td>
-                        <td style={tdStyle}>
-                          {renderBadgeEstadoStock(item.estado_stock)}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={4} style={emptyCellStyle}>
-                        No hay datos disponibles
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <h3
+              style={{
+                margin: 0,
+                fontSize: "17px",
+                fontWeight: 700,
+                color: "#111827",
+              }}
+            >
+              Próximos mantenimientos
+            </h3>
+            <p
+              style={{
+                margin: "6px 0 0",
+                fontSize: "13px",
+                color: "#6b7280",
+              }}
+            >
+              Vehículos con revisión pendiente o próxima
+            </p>
           </div>
 
-          {/* MANTENIMIENTOS */}
-          <div
-            style={{
-              ...sectionCard,
-              padding: "20px",
-            }}
-          >
-            <div style={{ marginBottom: "14px" }}>
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: "22px",
-                  fontWeight: 800,
-                  color: "#111827",
-                }}
-              >
-                Próximos mantenimientos
-              </h3>
-              <p
-                style={{
-                  margin: "8px 0 0 0",
-                  color: "#6b7280",
-                  fontSize: "14px",
-                  lineHeight: 1.6,
-                }}
-              >
-                Vehículos con revisión vencida, próxima o en fecha correcta.
-              </p>
-            </div>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0 }}>
+              <thead>
+                <tr>
+                  {["Matrícula", "Tipo", "Fecha", "Estado"].map((h) => (
+                    <th
+                      key={h}
+                      style={{
+                        padding: "14px 18px",
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        color: "#6b7280",
+                        background: "#f8fcf6",
+                        textAlign: "left",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.8px",
+                        borderBottom: "1px solid #edf6e8",
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
 
-            <div style={tableContainerStyle}>
-              <table style={tableStyle}>
-                <colgroup>
-                  <col style={{ width: "22%" }} />
-                  <col style={{ width: "30%" }} />
-                  <col style={{ width: "24%" }} />
-                  <col style={{ width: "24%" }} />
-                </colgroup>
-
-                <thead>
+              <tbody>
+                {loading ? (
                   <tr>
-                    <th style={thStyle}>Matrícula</th>
-                    <th style={thStyle}>Mantenimiento</th>
-                    <th style={thStyle}>Próxima fecha</th>
-                    <th style={thStyle}>Estado</th>
+                    <td
+                      colSpan={4}
+                      style={{
+                        textAlign: "center",
+                        padding: "28px",
+                        fontSize: "14px",
+                        color: "#6b7280",
+                      }}
+                    >
+                      Cargando datos…
+                    </td>
                   </tr>
-                </thead>
-
-                <tbody>
-                  {(dashboard.proximosMantenimientos || []).length > 0 ? (
-                    dashboard.proximosMantenimientos.map((item, index) => (
-                      <tr key={index}>
-                        <td style={{ ...tdStyle, fontWeight: 700, color: "#111827" }}>
-                          {item.matricula}
-                        </td>
-                        <td style={tdStyle}>{item.tipo_mantenimiento}</td>
-                        <td style={{ ...tdStyle, fontWeight: 700 }}>
-                          {item.proxima_fecha}
-                        </td>
-                        <td style={tdStyle}>
-                          {renderBadgeEstadoFecha(item.estado_fecha)}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={4} style={emptyCellStyle}>
-                        No hay datos disponibles
+                ) : (dashboard.proximosMantenimientos || []).length > 0 ? (
+                  dashboard.proximosMantenimientos.map((item, index) => (
+                    <tr key={index}>
+                      <td
+                        style={{
+                          padding: "16px 18px",
+                          fontSize: "14px",
+                          color: "#111827",
+                          fontWeight: 700,
+                          borderBottom: "1px solid #f1f7ed",
+                        }}
+                      >
+                        {item.matricula}
+                      </td>
+                      <td
+                        style={{
+                          padding: "16px 18px",
+                          fontSize: "14px",
+                          color: "#374151",
+                          borderBottom: "1px solid #f1f7ed",
+                        }}
+                      >
+                        {item.tipo_mantenimiento}
+                      </td>
+                      <td
+                        style={{
+                          padding: "16px 18px",
+                          fontSize: "14px",
+                          color: "#374151",
+                          borderBottom: "1px solid #f1f7ed",
+                        }}
+                      >
+                        {item.proxima_fecha}
+                      </td>
+                      <td
+                        style={{
+                          padding: "16px 18px",
+                          borderBottom: "1px solid #f1f7ed",
+                        }}
+                      >
+                        <BadgeEstado estado={item.estado_fecha} />
                       </td>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      style={{
+                        textAlign: "center",
+                        padding: "28px",
+                        fontSize: "14px",
+                        color: "#6b7280",
+                      }}
+                    >
+                      Sin mantenimientos pendientes
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </section>
-
-        {loading ? (
-          <div
-            style={{
-              marginTop: "18px",
-              color: "#6b7280",
-              fontSize: "14px",
-            }}
-          >
-            Cargando panel...
-          </div>
-        ) : null}
       </div>
     </main>
   );

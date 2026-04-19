@@ -99,13 +99,17 @@ async function descargarArchivoPlantilla(req, res) {
     const rutaAbsoluta = path.resolve(plantilla.archivo_ruta);
 
     if (!fs.existsSync(rutaAbsoluta)) {
-      return res.status(404).json({ error: "El archivo de la plantilla no existe en el servidor" });
+      return res
+        .status(404)
+        .json({ error: "El archivo de la plantilla no existe en el servidor" });
     }
 
     return res.download(rutaAbsoluta, plantilla.archivo_nombre);
   } catch (error) {
     console.error("Error al descargar archivo de plantilla:", error);
-    return res.status(500).json({ error: "Error al descargar el archivo de plantilla" });
+    return res
+      .status(500)
+      .json({ error: "Error al descargar el archivo de plantilla" });
   }
 }
 
@@ -115,7 +119,9 @@ async function crearPlantilla(req, res) {
     const descripcion = texto(req.body.descripcion);
     const tipo_etiqueta = texto(req.body.tipo_etiqueta);
     const campo_variable = texto(req.body.campo_variable) || "LOTE";
-    const impresora_id = req.body.impresora_id ? numero(req.body.impresora_id) : null;
+    const impresora_id = req.body.impresora_id
+      ? numero(req.body.impresora_id)
+      : null;
 
     if (!nombre) {
       return res.status(400).json({ error: "El nombre es obligatorio" });
@@ -125,7 +131,7 @@ async function crearPlantilla(req, res) {
       return res.status(400).json({ error: "Debes subir un archivo .ezp" });
     }
 
-    const archivo_nombre = req.file.filename;
+    const archivo_nombre = req.file.originalname || req.file.filename;
     const archivo_ruta = req.file.path.replace(/\\/g, "/");
 
     const [result] = await pool.query(
@@ -161,7 +167,9 @@ async function actualizarPlantilla(req, res) {
     const descripcion = texto(req.body.descripcion);
     const tipo_etiqueta = texto(req.body.tipo_etiqueta);
     const campo_variable = texto(req.body.campo_variable) || "LOTE";
-    const impresora_id = req.body.impresora_id ? numero(req.body.impresora_id) : null;
+    const impresora_id = req.body.impresora_id
+      ? numero(req.body.impresora_id)
+      : null;
 
     if (!id) {
       return res.status(400).json({ error: "ID de plantilla no válido" });
@@ -226,7 +234,9 @@ async function cambiarEstadoPlantilla(req, res) {
     });
   } catch (error) {
     console.error("Error al cambiar estado de plantilla:", error);
-    return res.status(500).json({ error: "Error al cambiar estado de plantilla" });
+    return res
+      .status(500)
+      .json({ error: "Error al cambiar estado de plantilla" });
   }
 }
 
@@ -239,7 +249,9 @@ async function crearTrabajoImpresion(req, res) {
     const plantilla_id = numero(req.body.plantilla_id);
     const lote = texto(req.body.lote);
     const cantidad = numero(req.body.cantidad);
-    const impresora_id = req.body.impresora_id ? numero(req.body.impresora_id) : null;
+    const impresora_id = req.body.impresora_id
+      ? numero(req.body.impresora_id)
+      : null;
 
     if (!plantilla_id) {
       return res.status(400).json({ error: "Selecciona una plantilla válida" });
@@ -250,7 +262,9 @@ async function crearTrabajoImpresion(req, res) {
     }
 
     if (!cantidad || cantidad <= 0) {
-      return res.status(400).json({ error: "La cantidad debe ser mayor que cero" });
+      return res
+        .status(400)
+        .json({ error: "La cantidad debe ser mayor que cero" });
     }
 
     const [plantillas] = await pool.query(
@@ -269,7 +283,7 @@ async function crearTrabajoImpresion(req, res) {
 
     const plantilla = plantillas[0];
 
-    if (!plantilla.activa) {
+    if (Number(plantilla.activa) !== 1) {
       return res.status(400).json({ error: "La plantilla está inactiva" });
     }
 
@@ -285,11 +299,15 @@ async function crearTrabajoImpresion(req, res) {
       );
 
       if (!impresoras.length) {
-        return res.status(400).json({ error: "La impresora seleccionada no existe" });
+        return res
+          .status(400)
+          .json({ error: "La impresora seleccionada no existe" });
       }
 
-      if (!impresoras[0].activa) {
-        return res.status(400).json({ error: "La impresora seleccionada no está activa" });
+      if (Number(impresoras[0].activa) !== 1) {
+        return res
+          .status(400)
+          .json({ error: "La impresora seleccionada no está activa" });
       }
 
       impresoraFinalNombre = impresoras[0].nombre;
@@ -319,7 +337,9 @@ async function crearTrabajoImpresion(req, res) {
     });
   } catch (error) {
     console.error("Error al crear trabajo de impresión:", error);
-    return res.status(500).json({ error: "Error al crear el trabajo de impresión" });
+    return res
+      .status(500)
+      .json({ error: "Error al crear el trabajo de impresión" });
   }
 }
 
@@ -406,7 +426,9 @@ async function marcarTrabajoProcesando(req, res) {
     }
 
     if (rows[0].estado !== "PENDIENTE") {
-      return res.status(400).json({ error: "El trabajo ya no está pendiente" });
+      return res
+        .status(400)
+        .json({ error: "El trabajo ya no está pendiente" });
     }
 
     await pool.query(
@@ -423,7 +445,9 @@ async function marcarTrabajoProcesando(req, res) {
     });
   } catch (error) {
     console.error("Error al marcar trabajo como procesando:", error);
-    return res.status(500).json({ error: "Error al marcar trabajo como procesando" });
+    return res
+      .status(500)
+      .json({ error: "Error al marcar trabajo como procesando" });
   }
 }
 
@@ -449,12 +473,7 @@ async function finalizarTrabajo(req, res) {
            archivo_generado_ruta = ?,
            procesada_en = NOW()
        WHERE id = ?`,
-      [
-        estado,
-        mensaje_error || null,
-        archivo_generado_ruta || null,
-        id,
-      ]
+      [estado, mensaje_error || null, archivo_generado_ruta || null, id]
     );
 
     return res.json({
